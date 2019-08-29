@@ -12,7 +12,7 @@
 using namespace std;
 
 int tsub_ok(int x, int y){
-    int intmin = 1 << (sizeof(int)<<3);
+    int intmin = 1 << (sizeof(int)<<3)-1;
     int xt = intmin&x;
     int yt = intmin&y;
     int st = intmin&(x-y);

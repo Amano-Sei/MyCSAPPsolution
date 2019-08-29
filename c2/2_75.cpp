@@ -12,15 +12,22 @@
 using namespace std;
 
 int signed_high_prod(int x, int y){
-    return (long long)x * y >> 32;
+    //验证的时候才意识到自己踩坑了，直接转可能会改变符号...
+    long long lx = (long long)x << 32 >> 32, ly = (long long)y << 32 >> 32;
+    return lx*ly >> 32;
 }
 
 unsigned unsigned_high_prod(unsigned x, unsigned y){
     int w = sizeof(int)<<3;
-    return (x >> w-1)*x + (y >> w-1)*y + signed_high_prod(x, y);
+    return signed_high_prod(x, y) + (x >> w-1)*(x<<1>>1) + (y >> w-1)*(y<<1>>1);
+}
+
+unsigned long long nopans(unsigned x, unsigned y){
+    return (unsigned long long)x * y >> 32;
 }
 
 int main(){
+    printf("%x==%x\n", unsigned_high_prod(0xf0000000, 0x70000000), nopans(0xf0000000, 0x70000000));
 	return 0;
 }
 

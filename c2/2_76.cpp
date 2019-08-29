@@ -15,6 +15,8 @@ void *calloc(size_t nmemb, size_t size){
     void *ans = NULL;
     size_t bufsize = nmemb*size;
     bufsize && bufsize/nmemb == size && ans = malloc(bufsize) && memset(ans, 0, bufsize);
+    //到最后也没明白怎么不用乘除来做...还用上了前面的作弊
+    //先就这样吧...
     return ans;
 }
 
