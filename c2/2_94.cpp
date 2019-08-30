@@ -32,7 +32,7 @@ float_bits float_twice(float_bits f){
     unsigned sign = f>>31;
     unsigned exp = f>>23 & 0xff;
     unsigned fac = f & 0x7fffff;
-    if(exp == 0)
+    /*if(exp == 0)
         fac <<= 1;
     //溢出的情况下会因为位或运算导致结果还是正确的
     else if(exp < 0xfe)
@@ -40,9 +40,15 @@ float_bits float_twice(float_bits f){
     else if(exp == 0xfe){
         exp += 1;
         fac = 0;
-    }
+    }*/
+    fac <<= !exp;
+    unsigned t = ~exp+0xff;
+    fac = fac & (~!!t +1);
+    exp = exp + (!!exp & (t>>31 & 1 ^ 1));
     return sign<<31 | exp<<23 | fac;
 }
+//在写datalab的时候重看了这里，感觉只用位运算不是不可能...
+//事实证明是可以的
 
 int main(){
     //本来想写个测试函数的，但是不知道怎么传判断错误的表达式
@@ -53,8 +59,10 @@ int main(){
     do{
         cans = float_twice(cur);
         cf = u2f(cur);
-        if(isnan(cf) && cans!=cur || !isnan(cf) && 2*cf!=u2f(cans))
+        if(isnan(cf) && cans!=cur || !isnan(cf) && 2*cf!=u2f(cans)){
             printf("warning... %x %x %f\n", cur, cans, cf);
+            getchar();
+        }
         cur++;
         if(cur % 0x10000000 == 0)
             printf("%d/16 done\n", ++d);

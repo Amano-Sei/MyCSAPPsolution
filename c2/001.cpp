@@ -13,6 +13,8 @@ int main(){
     //double a = 3.14;
     //cout << a+b-b << endl;
     //cout << a + (b-b) << endl;
+    cout << (0xffffffff<0) << endl;
+    cout << ((int)0xffffffff<0) << endl;
     for(int i = -5; i <= 10; i++)
         printf("%d===%.5x\n", i, i);
     return 0;
