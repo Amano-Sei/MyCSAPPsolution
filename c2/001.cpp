@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 int main(){
@@ -17,6 +18,8 @@ int main(){
     cout << ((int)0xffffffff<0) << endl;
     for(int i = -5; i <= 10; i++)
         printf("%d===%.5x\n", i, i);
+    cout << -10%3 << endl;
+    cout << atan(-100/10)/M_PI*180;
     return 0;
 }
 
