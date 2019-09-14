@@ -1,4 +1,5 @@
-# DATA LAB
+# Data Lab
+2019-09-14 夜 更新：改掉了一个爆蠢的地方...惊了，居然有人看我的solution的，大概不会再在自己solution里随意倒情绪垃圾了QAQ  
 这里是喜欢睡觉的室友终于早起去建模了的as，虽然就算他们不去今天我也要在早上把lab做完的，不管怎样，比他们晚起好多了  
 下午还要打网络赛...这一周一个字的oj都没碰（不过位运算比起之前要好多了  
 现在再看位运算，我有种所有的控制语句都可以只用位运算来实现的感觉，虽然自己不会证明，但是我想应该不会是错的  
@@ -11,19 +12,19 @@
 但是我相信做精的最后一定比做得快的强，慢慢做脚踏实体地前进最后一定会比急躁的家伙强的多的  
   
 # dlc检查结果
-dlc:bits.c:147:bitXor: 8 operators  
-dlc:bits.c:158:tmin: 1 operators  
-dlc:bits.c:169:isTmax: 9 operators  
-dlc:bits.c:181:allOddBits: 9 operators  
-dlc:bits.c:191:negate: 2 operators  
-dlc:bits.c:204:isAsciiDigit: 8 operators  
-dlc:bits.c:214:conditional: 10 operators  
-dlc:bits.c:226:isLessOrEqual: 16 operators  
-dlc:bits.c:238:logicalNeg: 7 operators  
-dlc:bits.c:271:howManyBits: 31 operators  
-dlc:bits.c:299:floatScale2: 15 operators  
-dlc:bits.c:325:floatFloat2Int: 20 operators  
-dlc:bits.c:348:floatPower2: 10 operators  
+dlc:bits.c:147:bitXor: 8 operators
+dlc:bits.c:158:tmin: 1 operators
+dlc:bits.c:169:isTmax: 9 operators
+dlc:bits.c:181:allOddBits: 9 operators
+dlc:bits.c:191:negate: 2 operators
+dlc:bits.c:204:isAsciiDigit: 8 operators
+dlc:bits.c:214:conditional: 10 operators
+dlc:bits.c:226:isLessOrEqual: 16 operators
+dlc:bits.c:238:logicalNeg: 7 operators
+dlc:bits.c:271:howManyBits: 31 operators
+dlc:bits.c:299:floatScale2: 15 operators
+dlc:bits.c:328:floatFloat2Int: 19 operators
+dlc:bits.c:351:floatPower2: 10 operators
    
 # btest结果
 Score	Rating	Errors	Function  

@@ -310,8 +310,11 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  int sign = ((~(uf>>31)+1)<<1) +1;
+  //int sign = ((~(uf>>31)+1)<<1) +1;
   //不能用强转来用算术右移(((
+  int sign = (-(uf>>31)<<1) +1;
+  //惊了居然有人看我的solution的
+  //然后看了一眼，突然发现自己上面爆蠢...
   int e = (uf>>23 & 0xff) - 0x7f;
   unsigned fac = uf<<9>>9 | 0x800000;
   if(e < 0)
