@@ -12,19 +12,19 @@
 但是我相信做精的最后一定比做得快的强，慢慢做脚踏实体地前进最后一定会比急躁的家伙强的多的  
   
 # dlc检查结果
-dlc:bits.c:147:bitXor: 8 operators
-dlc:bits.c:158:tmin: 1 operators
-dlc:bits.c:169:isTmax: 9 operators
-dlc:bits.c:181:allOddBits: 9 operators
-dlc:bits.c:191:negate: 2 operators
-dlc:bits.c:204:isAsciiDigit: 8 operators
-dlc:bits.c:214:conditional: 10 operators
-dlc:bits.c:226:isLessOrEqual: 16 operators
-dlc:bits.c:238:logicalNeg: 7 operators
-dlc:bits.c:271:howManyBits: 31 operators
-dlc:bits.c:299:floatScale2: 15 operators
-dlc:bits.c:328:floatFloat2Int: 19 operators
-dlc:bits.c:351:floatPower2: 10 operators
+dlc:bits.c:147:bitXor: 8 operators  
+dlc:bits.c:158:tmin: 1 operators  
+dlc:bits.c:169:isTmax: 9 operators  
+dlc:bits.c:181:allOddBits: 9 operators  
+dlc:bits.c:191:negate: 2 operators  
+dlc:bits.c:204:isAsciiDigit: 8 operators  
+dlc:bits.c:214:conditional: 10 operators  
+dlc:bits.c:226:isLessOrEqual: 16 operators  
+dlc:bits.c:238:logicalNeg: 7 operators  
+dlc:bits.c:271:howManyBits: 31 operators  
+dlc:bits.c:299:floatScale2: 15 operators  
+dlc:bits.c:328:floatFloat2Int: 19 operators  
+dlc:bits.c:351:floatPower2: 10 operators  
    
 # btest结果
 Score	Rating	Errors	Function  
