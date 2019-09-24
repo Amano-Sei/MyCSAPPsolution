@@ -16,19 +16,19 @@
 0x055:  90                                  #   ret
 
 0x056:                                      #sum:
-0x056:  30 f8 08 00 00 00 00 00 00 00       #   irmovq  $8, %r8
-0x060:  30 f9 01 00 00 00 00 00 00 00       #   irmovq  $1, %9
-0x06a:  63 00                               #   xorq    %rax, %rax
-0x06c:  62 66                               #   andq    %rsi, %rsi
-0x06e:  70 87 00 00 00 00 00 00 00          #   jmp     test
-0x077:                                      #loop:
-0x077:  50 a7 00 00 00 00 00 00 00 00       #   mrmovq  (%rdi), %r10
-0x081:  60 a0                               #   addq    %r10, %rax
-0x083:  60 87                               #   addq    %r8, %rdi
-0x085:  61 96                               #   subq    %r9, %rsi
-0x087:                                      #test:
-0x087:  74 77 00 00 00 00 00 00 00          #   jne     loop
-0x090:  90                                  #   ret
+#0x056:  30 f8 08 00 00 00 00 00 00 00       #   irmovq  $8, %r8
+#0x060:  30 f9 01 00 00 00 00 00 00 00       #   irmovq  $1, %9
+0x056:  63 00                               #   xorq    %rax, %rax
+0x058:  62 66                               #   andq    %rsi, %rsi
+0x05a:  70 83 00 00 00 00 00 00 00          #   jmp     test
+0x063:                                      #loop:
+0x063:  50 a7 00 00 00 00 00 00 00 00       #   mrmovq  (%rdi), %r10
+0x06d:  60 a0                               #   addq    %r10, %rax
+0x06f:  c0 f7 08 00 00 00 00 00 00 00       #   iraddq  $8, %rdi
+0x079:  c0 f6 ff ff ff ff ff ff ff ff       #   iraddq  $-1, %rsi
+0x083:                                      #test:
+0x083:  74 63 00 00 00 00 00 00 00          #   jne     loop
+0x08c:  90                                  #   ret
 
 0x200:                                      #.pos 0x200
 0x200:                                      #stack:

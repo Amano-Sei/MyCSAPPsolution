@@ -1,0 +1,16 @@
+rsum:
+    xorq    %rax, %rax
+    andq    %rsi, %rsi
+    jle      toret
+    pushq   %rbx
+    mrmovq  (%rdi), %rbx
+    irmovq    $-1, %rdx
+    addq    %rdx, %rsi
+    irmovq    $8, %rdx
+    addq    %rdx, %rdi
+    call    rsum
+    addq    %rbx, %rax
+    popq    %rbx
+toret:
+    ret
+
