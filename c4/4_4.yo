@@ -1,0 +1,16 @@
+0x000:                      | rsum:
+0x000: 6300                 |     xorq    %rax, %rax
+0x002: 6266                 |     andq    %rsi, %rsi
+0x004: 713e00000000000000   |     jle      toret
+0x00d: a03f                 |     pushq   %rbx
+0x00f: 50370000000000000000 |     mrmovq  (%rdi), %rbx
+0x019: 30f2ffffffffffffffff |     irmovq    $-1, %rdx
+0x023: 6026                 |     addq    %rdx, %rsi
+0x025: 30f20800000000000000 |     irmovq    $8, %rdx
+0x02f: 6027                 |     addq    %rdx, %rdi
+0x031: 800000000000000000   |     call    rsum
+0x03a: 6030                 |     addq    %rbx, %rax
+0x03c: b03f                 |     popq    %rbx
+0x03e:                      | toret:
+0x03e: 90                   |     ret
+                            | 
