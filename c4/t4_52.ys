@@ -1,0 +1,5 @@
+tiaddq:
+    xorq    %rax, %rax
+    iaddq   $10, %rax
+    halt
+

@@ -1,6 +1,7 @@
 # Modify this line to indicate the default version
 
-VERSION=std
+#VERSION=std
+VERSION=full
 
 # Comment this out if you don't have Tcl/Tk on your system
 

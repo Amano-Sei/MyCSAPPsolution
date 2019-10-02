@@ -1,4 +1,4 @@
-char simname[] = "Y86-64 Processor: pipe-std.hcl";
+char simname[] = "Y86-64 Processor: pipe-stall.hcl";
 #include <stdio.h>
 #include "isa.h"
 #include "pipeline.h"
@@ -98,23 +98,12 @@ long long gen_d_dstM()
 long long gen_d_valA()
 {
     return (((if_id_curr->icode) == (I_CALL) || (if_id_curr->icode) == 
-        (I_JMP)) ? (if_id_curr->valp) : ((id_ex_next->srca) == 
-        (ex_mem_next->deste)) ? (ex_mem_next->vale) : ((id_ex_next->srca)
-         == (ex_mem_curr->destm)) ? (mem_wb_next->valm) : (
-        (id_ex_next->srca) == (ex_mem_curr->deste)) ? (ex_mem_curr->vale)
-       : ((id_ex_next->srca) == (mem_wb_curr->destm)) ? (mem_wb_curr->valm)
-       : ((id_ex_next->srca) == (mem_wb_curr->deste)) ? (mem_wb_curr->vale)
-       : (d_regvala));
+        (I_JMP)) ? (if_id_curr->valp) : (d_regvala));
 }
 
 long long gen_d_valB()
 {
-    return (((id_ex_next->srcb) == (ex_mem_next->deste)) ? 
-      (ex_mem_next->vale) : ((id_ex_next->srcb) == (ex_mem_curr->destm)) ? 
-      (mem_wb_next->valm) : ((id_ex_next->srcb) == (ex_mem_curr->deste)) ? 
-      (ex_mem_curr->vale) : ((id_ex_next->srcb) == (mem_wb_curr->destm)) ? 
-      (mem_wb_curr->valm) : ((id_ex_next->srcb) == (mem_wb_curr->deste)) ? 
-      (mem_wb_curr->vale) : (d_regvalb));
+    return (d_regvalb);
 }
 
 long long gen_aluA()
@@ -222,28 +211,48 @@ long long gen_F_bubble()
 
 long long gen_F_stall()
 {
-    return ((((id_ex_curr->icode) == (I_MRMOVQ) || (id_ex_curr->icode) == 
-          (I_POPQ)) & ((id_ex_curr->destm) == (id_ex_next->srca) || 
-          (id_ex_curr->destm) == (id_ex_next->srcb))) | ((I_RET) == 
+    return (((0 | (((id_ex_next->srca) != (REG_NONE)) & ((id_ex_next->srca)
+               == (id_ex_curr->destm) || (id_ex_next->srca) == 
+              (ex_mem_curr->destm) || (id_ex_next->srca) == 
+              (mem_wb_curr->destm) || (id_ex_next->srca) == 
+              (ex_mem_next->deste) || (id_ex_next->srca) == 
+              (ex_mem_curr->deste) || (id_ex_next->srca) == 
+              (mem_wb_curr->deste)))) | (((id_ex_next->srcb) != (REG_NONE))
+           & ((id_ex_next->srcb) == (id_ex_curr->destm) || 
+            (id_ex_next->srcb) == (ex_mem_curr->destm) || 
+            (id_ex_next->srcb) == (mem_wb_curr->destm) || 
+            (id_ex_next->srcb) == (ex_mem_next->deste) || 
+            (id_ex_next->srcb) == (ex_mem_curr->deste) || 
+            (id_ex_next->srcb) == (mem_wb_curr->deste)))) | ((I_RET) == 
         (if_id_curr->icode) || (I_RET) == (id_ex_curr->icode) || (I_RET)
          == (ex_mem_curr->icode)));
 }
 
 long long gen_D_stall()
 {
-    return (((id_ex_curr->icode) == (I_MRMOVQ) || (id_ex_curr->icode) == 
-        (I_POPQ)) & ((id_ex_curr->destm) == (id_ex_next->srca) || 
-        (id_ex_curr->destm) == (id_ex_next->srcb)));
+    return ((0 | (((id_ex_next->srca) != (REG_NONE)) & ((id_ex_next->srca)
+             == (id_ex_curr->destm) || (id_ex_next->srca) == 
+            (ex_mem_curr->destm) || (id_ex_next->srca) == 
+            (mem_wb_curr->destm) || (id_ex_next->srca) == 
+            (ex_mem_next->deste) || (id_ex_next->srca) == 
+            (ex_mem_curr->deste) || (id_ex_next->srca) == 
+            (mem_wb_curr->deste)))) | (((id_ex_next->srcb) != (REG_NONE))
+         & ((id_ex_next->srcb) == (id_ex_curr->destm) || (id_ex_next->srcb)
+           == (ex_mem_curr->destm) || (id_ex_next->srcb) == 
+          (mem_wb_curr->destm) || (id_ex_next->srcb) == 
+          (ex_mem_next->deste) || (id_ex_next->srcb) == 
+          (ex_mem_curr->deste) || (id_ex_next->srcb) == 
+          (mem_wb_curr->deste))));
 }
 
 long long gen_D_bubble()
 {
     return ((((id_ex_curr->icode) == (I_JMP)) & !(ex_mem_next->takebranch))
-       | (!(((id_ex_curr->icode) == (I_MRMOVQ) || (id_ex_curr->icode) == 
-            (I_POPQ)) & ((id_ex_curr->destm) == (id_ex_next->srca) || 
-            (id_ex_curr->destm) == (id_ex_next->srcb))) & ((I_RET) == 
-          (if_id_curr->icode) || (I_RET) == (id_ex_curr->icode) || (I_RET)
-           == (ex_mem_curr->icode))));
+       | ((!(((id_ex_curr->icode) == (I_MRMOVQ) || (id_ex_curr->icode) == 
+              (I_POPQ)) & ((id_ex_curr->destm) == (id_ex_next->srca) || 
+              (id_ex_curr->destm) == (id_ex_next->srcb))) & !0) & ((I_RET)
+           == (if_id_curr->icode) || (I_RET) == (id_ex_curr->icode) || 
+          (I_RET) == (ex_mem_curr->icode))));
 }
 
 long long gen_E_stall()
@@ -253,10 +262,21 @@ long long gen_E_stall()
 
 long long gen_E_bubble()
 {
-    return ((((id_ex_curr->icode) == (I_JMP)) & !(ex_mem_next->takebranch))
-       | (((id_ex_curr->icode) == (I_MRMOVQ) || (id_ex_curr->icode) == 
-          (I_POPQ)) & ((id_ex_curr->destm) == (id_ex_next->srca) || 
-          (id_ex_curr->destm) == (id_ex_next->srcb))));
+    return ((((((id_ex_curr->icode) == (I_JMP)) & !
+            (ex_mem_next->takebranch)) | (((id_ex_next->srca) != (REG_NONE)
+              ) & ((id_ex_next->srca) == (id_ex_curr->destm) || 
+              (id_ex_next->srca) == (ex_mem_curr->destm) || 
+              (id_ex_next->srca) == (mem_wb_curr->destm) || 
+              (id_ex_next->srca) == (ex_mem_next->deste) || 
+              (id_ex_next->srca) == (ex_mem_curr->deste) || 
+              (id_ex_next->srca) == (mem_wb_curr->deste)))) | ((
+            (id_ex_next->srcb) != (REG_NONE)) & ((id_ex_next->srcb) == 
+            (id_ex_curr->destm) || (id_ex_next->srcb) == 
+            (ex_mem_curr->destm) || (id_ex_next->srcb) == 
+            (mem_wb_curr->destm) || (id_ex_next->srcb) == 
+            (ex_mem_next->deste) || (id_ex_next->srcb) == 
+            (ex_mem_curr->deste) || (id_ex_next->srcb) == 
+            (mem_wb_curr->deste)))) | 0);
 }
 
 long long gen_M_stall()

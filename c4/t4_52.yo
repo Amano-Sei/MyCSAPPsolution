@@ -1,0 +1,5 @@
+0x000:                      | tiaddq:
+0x000: 6300                 |     xorq    %rax, %rax
+0x002: c0f00a00000000000000 |     iaddq   $10, %rax
+0x00c: 00                   |     halt
+                            | 
