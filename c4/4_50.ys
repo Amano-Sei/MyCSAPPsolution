@@ -1,46 +1,55 @@
-switchv:
-    xorq    %rax, %rax
-    andq    %rdi, %rdi
-    jl      .L4
-    irmovq  $6, %rsi
-    subq    %rdi, %rsi
-    jle     .l4
-    addq    %rdi, %rdi
-    addq    %rdi, %rdi
-    addq    %rdi, %rdi
-    irmovq  .L5, %rsi
-    addq    %rsi, %rdi
-    pushq   %rdi
-    ret
-.L1:
-    irmovq  $0xaaa, %rax
-    ret
-.L2:
-    irmovq  $0xbbb, %rax
-    ret
-.L3:
-    irmovq  $0xccc, %rax
-    ret
-.L4:
-    irmovq  $0xddd, %rax
-    ret
-
-    .align 8
-.L5:
-    .long .L1
-    .long .L4
-    .long .L2
-    .long .L3
-    .long .L4
-    .long .L2
-
 main:
+    irmovq  stack, %rsp
+    irmovq  $1, %rdx
     irmovq  $-1, %rdi
 totest:
     irmovq  $7, %rsi
     subq    %rdi, %rsi
     jle     toend
     call    switchv
+    addq    %rdx, %rdi
+    jmp     totest
 toend:
+    halt
+
+switchv:
+    xorq    %rax, %rax
+    andq    %rdi, %rdi
+    jl      L4
+    irmovq  $6, %rsi
+    subq    %rdi, %rsi
+    jle     L4
+    rrmovq  %rdi, %rcx
+    addq    %rcx, %rcx
+    addq    %rcx, %rcx
+    addq    %rcx, %rcx
+    irmovq  L5, %rsi
+    addq    %rsi, %rcx
+    mrmovq  (%rcx), %r8
+    pushq   %r8
     ret
-    
+L1:
+    irmovq  $0xaaa, %rax
+    ret
+L2:
+    irmovq  $0xbbb, %rax
+    ret
+L3:
+    irmovq  $0xccc, %rax
+    ret
+L4:
+    irmovq  $0xddd, %rax
+    ret
+
+.pos 0xc0
+L5:
+    .quad L1
+    .quad L4
+    .quad L2
+    .quad L3
+    .quad L4
+    .quad L2
+
+.pos 0x200
+stack:
+
