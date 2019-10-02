@@ -1,0 +1,49 @@
+bubble_a:
+    pushq   %r10
+    pushq   %r11
+    movq    %rsi, %r9
+    addq    %r9, %r9
+    addq    %r9, %r9
+    addq    %r9, %r9
+#上来就遇到了难题(?)，没有mulq和leaq指令的情况下要就算结束指针
+#用循环感觉太伤了，好在8只需要重复叠加3次即可
+    irmovq  $1, %r12
+    irmovq  $8, %r8
+    subq    %r10, %rsi
+    jmp     totest
+nxtinloop:
+    addq    %r8, %rdx
+    addq    %r8, %rcx
+inlooptest:
+    rrmovq  %r9, %r13
+    subq    %rcx, %r13
+    jle     nxtloop
+#start
+    mrmovq  (%rdx), %r13
+    mrmovq  (%rcx), %r14
+    irmovq  $8, %r10
+    xorq    %r11, %r11
+    subq    %r14, %r13
+    cmovle  %r8, %r11
+    xorq    %r11, %r10
+    addq    %rdx, %r10
+    addq    %rdx, %r11
+    rmmovq  %r13, (%r10)
+    rmmovq  %r14, (%r11)
+    jmp     nxtinloop
+#end
+#开始困惑了一下，不过重新审视这个问题，发现可以从传递的地址入手，借助0异或任何数都不会改变原值，设置默认的状态，通过cmov一个8修改这个状态
+nxtloop:
+    subq    %r12, %rsi
+totest:
+    andq    %rsi, %rsi
+    jle     toret
+    rrmovq  %rdi, %rdx
+    rrmovq  %rdi, %rcx
+    addq    %r8, %rcx
+    jmp     inlooptest
+toret:
+    popq    %r11
+    popq    %r10
+    ret
+
