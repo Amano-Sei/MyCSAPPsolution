@@ -9,6 +9,12 @@
 ## The code here is nearly identical to that for the normal pipeline.  
 ## Comments starting with keyword "BBTFNT" have been added at places
 ## relevant to the exercise.
+##
+## 题意说用有符号运算来判断我还以为要用运算器来设置条件码
+## 但是一想，用E里面的alu来设置不把本来的e_cnd给覆盖掉了么...
+## 这个肯定是要用独立的运算单元或者额外的条件码寄存器的...
+## 没办法，上网搜dalao的答案（然而...
+## 赫赫然直接比较的答案...一时语塞...
 
 ####################################################################
 #    C Include's.  Don't alter these                               #
@@ -139,7 +145,9 @@ wordsig W_valM  'mem_wb_curr->valm'	# Memory M value
 ## What address should instruction be fetched at
 word f_pc = [
 	# Mispredicted branch.  Fetch at incremented PC
-	M_icode == IJXX && !M_Cnd : M_valA;
+	M_icode == IJXX && M_ifun != UNCOND && M_valE < M_valA && !M_Cnd : M_valA;
+	M_icode == IJXX && M_ifun != UNCOND && M_valE >= M_valA && M_Cnd : M_valE;
+    # 因为无论如何都要比较valP和valC，所以只能都传过去了
 	# Completion of RET instruction
 	W_icode == IRET : W_valM;
 	# Default: Use predicted value of PC
@@ -183,7 +191,10 @@ bool need_valC =
 # Predict next value of PC
 word f_predPC = [
 	# BBTFNT: This is where you'll change the branch prediction rule
-	f_icode in { IJXX, ICALL } : f_valC;
+#f_icode in { IJXX, ICALL } : f_valC;
+    f_icode == ICALL : f_valC;
+    f_icode == IJXX && f_ifun == UNCOND : f_valC;
+    f_icode == IJXX && f_valC < f_valP : f_valC;
 	1 : f_valP;
 ];
 
@@ -247,7 +258,7 @@ word d_valB = [
 ## Select input A to ALU
 word aluA = [
 	E_icode in { IRRMOVQ, IOPQ } : E_valA;
-	E_icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ } : E_valC;
+	E_icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IJXX } : E_valC;
 	E_icode in { ICALL, IPUSHQ } : -8;
 	E_icode in { IRET, IPOPQ } : 8;
 	# Other instructions don't need ALU
@@ -257,7 +268,7 @@ word aluA = [
 word aluB = [
 	E_icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, 
 		     IPUSHQ, IRET, IPOPQ } : E_valB;
-	E_icode in { IRRMOVQ, IIRMOVQ } : 0;
+	E_icode in { IRRMOVQ, IIRMOVQ, IJXX } : 0;
 	# Other instructions don't need ALU
 ];
 
@@ -343,7 +354,8 @@ bool D_stall =
 
 bool D_bubble =
 	# Mispredicted branch
-	(E_icode == IJXX && !e_Cnd) ||
+	(E_icode == IJXX && E_ifun != UNCOND && e_valE < E_valA && !e_Cnd) ||
+	(E_icode == IJXX && E_ifun != UNCOND && e_valE >= E_valA && e_Cnd) ||
 	# BBTFNT: This condition will change
 	# Stalling at fetch while ret passes through pipeline
 	# but not condition for a load/use hazard
@@ -355,7 +367,8 @@ bool D_bubble =
 bool E_stall = 0;
 bool E_bubble =
 	# Mispredicted branch
-	(E_icode == IJXX && !e_Cnd) ||
+	(E_icode == IJXX && E_ifun != UNCOND && e_valE < E_valA && !e_Cnd) ||
+	(E_icode == IJXX && E_ifun != UNCOND && e_valE >= E_valA && e_Cnd) ||
 	# BBTFNT: This condition will change
 	# Conditions for a load/use hazard
 	E_icode in { IMRMOVQ, IPOPQ } &&

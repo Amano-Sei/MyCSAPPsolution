@@ -2,7 +2,11 @@
 
 #VERSION=std
 #VERSION=stall
-VERSION=full
+#VERSION=full
+#VERSION=nt
+#VERSION=btfnt
+#VERSION=lf
+VERSION=1w
 
 # Comment this out if you don't have Tcl/Tk on your system
 

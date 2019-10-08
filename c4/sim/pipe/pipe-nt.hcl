@@ -9,6 +9,9 @@
 ## to that for the normal pipeline.  
 ## Comments starting with keyword "BNT" have been added at places
 ## relevant to the exercise.
+##
+## 本来想吐槽就那么几个BNT做不到吧，才发现他没说只能动BNT附近的东西（
+## 然后到做到lf的时候才发觉是自己理解错了（BNT是指明被修改的地方
 
 ####################################################################
 #    C Include's.  Don't alter these                               #
@@ -139,7 +142,8 @@ wordsig W_valM  'mem_wb_curr->valm'	# Memory M value
 ## What address should instruction be fetched at
 word f_pc = [
 	# Mispredicted branch.  Fetch at incremented PC
-	M_icode == IJXX && !M_Cnd : M_valA;
+#M_icode == IJXX && !M_Cnd : M_valA;
+    M_icode == IJXX && M_ifun != UNCOND && M_Cnd : M_valA;
 	# Completion of RET instruction
 	W_icode == IRET : W_valM;
 	# Default: Use predicted value of PC
@@ -183,7 +187,9 @@ bool need_valC =
 # Predict next value of PC
 word f_predPC = [
 	# BNT: This is where you'll change the branch prediction rule
-	f_icode in { IJXX, ICALL } : f_valC;
+#f_icode in { IJXX, ICALL } : f_valC;
+    f_icode == ICALL : f_valC;
+    f_icode == IJXX && f_ifun == 0 : f_valC;
 	1 : f_valP;
 ];
 
@@ -273,7 +279,12 @@ bool set_cc = E_icode == IOPQ &&
 	!m_stat in { SADR, SINS, SHLT } && !W_stat in { SADR, SINS, SHLT };
 
 ## Generate valA in execute stage
-word e_valA = E_valA;    # Pass valA through stage
+#word e_valA = E_valA;    # Pass valA through stage
+word e_valA = [
+    E_icode == IJXX && E_ifun != UNCOND && e_Cnd : E_valC;
+    1 : E_valA;
+];
+# 发现他不给D_valC用...只能这样了（
 
 ## Set dstE to RNONE in event of not-taken conditional move
 word e_dstE = [
@@ -343,7 +354,7 @@ bool D_stall =
 
 bool D_bubble =
 	# Mispredicted branch
-	(E_icode == IJXX && !e_Cnd) ||
+	(E_icode == IJXX && E_ifun != UNCOND && e_Cnd) ||
 	# Stalling at fetch while ret passes through pipeline
 	# but not condition for a load/use hazard
 	!(E_icode in { IMRMOVQ, IPOPQ } && E_dstM in { d_srcA, d_srcB }) &&
@@ -354,7 +365,7 @@ bool D_bubble =
 bool E_stall = 0;
 bool E_bubble =
 	# Mispredicted branch
-	(E_icode == IJXX && !e_Cnd) ||
+	(E_icode == IJXX && E_ifun != UNCOND && e_Cnd) ||
 	# Conditions for a load/use hazard
 	E_icode in { IMRMOVQ, IPOPQ } &&
 	 E_dstM in { d_srcA, d_srcB};
