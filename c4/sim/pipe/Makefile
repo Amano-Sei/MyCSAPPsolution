@@ -1,7 +1,8 @@
 # Modify this line to indicate the default version to build
 
 #VERSION=std
-VERSION=stall
+#VERSION=stall
+VERSION=full
 
 # Comment this out if you don't have Tcl/Tk on your system
 

@@ -332,7 +332,11 @@ bool D_bubble =
 	# Mispredicted branch
 	(E_icode == IJXX && !e_Cnd) ||
 	# Stalling at fetch while ret passes through pipeline
-	!(E_icode in { IMRMOVQ, IPOPQ } && E_dstM in { d_srcA, d_srcB }) &&
+    # 因为stall导致不再只是E_icode是组合B的情况了
+    # emmm感觉自己pipeline学得好烂...
+    !(E_icode in { IMRMOVQ, IPOPQ } && E_dstM in { d_srcA, d_srcB }) &&
+    !(M_icode in { IMRMOVQ, IPOPQ } && M_dstM in { d_srcA, d_srcB }) &&
+	!(W_icode in { IMRMOVQ, IPOPQ } && W_dstM in { d_srcA, d_srcB }) &&
 	# but not condition for a generate/use hazard
 	!0 &&
 	  IRET in { D_icode, E_icode, M_icode };

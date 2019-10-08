@@ -1,8 +1,0 @@
-	    irmovq $4, %rsp
-	    nop
-	    nop
-	    nop
-            iaddq $-32, %rsp
-	    nop
-	    nop
-	    halt
