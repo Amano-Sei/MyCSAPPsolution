@@ -3,16 +3,17 @@ bubble_a:
     addq    %r9, %r9
     addq    %r9, %r9
     addq    %r9, %r9
+    addq    %rdi, %r9
 #上来就遇到了难题(?)，没有mulq和leaq指令的情况下要就算结束指针
 #用循环感觉太伤了，好在8只需要重复叠加3次即可
     irmovq  $1, %r12
     irmovq  $8, %r8
-    subq    %r10, %rsi
-    jmp     totest
+    subq    %r12, %rsi
+    jmp     looptest
 nxtinloop:
     addq    %r8, %rdx
     addq    %r8, %rcx
-looptest:
+inlooptest:
     rrmovq  %r9, %r13
     subq    %rcx, %r13
     jle     nxtloop
@@ -23,16 +24,17 @@ looptest:
     mrmovq  (%rdx), %r13
     rmmovq  %r13, (%rcx)
     rmmovq  %r14, (%rdx)
-    jmp     nxtloop
+    jmp     nxtinloop
 nxtloop:
     subq    %r12, %rsi
-totest:
+    subq    %r8, %r9
+looptest:
     andq    %rsi, %rsi
     jle     toret
     rrmovq  %rdi, %rdx
     rrmovq  %rdi, %rcx
     addq    %r8, %rcx
-    jmp     looptest
+    jmp     inlooptest
 toret:
     ret
 
