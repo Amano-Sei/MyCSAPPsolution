@@ -1,0 +1,56 @@
+                            | #/* $begin ncopy-ys */
+                            | ##################################################################
+                            | # ncopy.ys - Copy a src block of len words to dst.
+                            | # Return the number of positive words (>0) contained in src.
+                            | #
+                            | # Amano Sei
+                            | #
+                            | # emmm，怎么说呢，这次的lab在做完homework的情况下完全没有难度啊（
+                            | # 不过还是简单说下吧
+                            | # 首先，我们的pipeline是默认判断跳转执行的，
+                            | # 所以把第一次判断和循环的进行合并
+                            | # （不过如果做好前向不跳，后向跳的判断的话肯定是本来比较好）
+                            | # 然后，这是我在用y86-64写程序的时候的感想
+                            | # 如果常数占据寄存器的话，寄存器的数量瞬间就感觉很紧张（
+                            | # 如果不固定占用的话，重复初始化很浪费时钟周期
+                            | # 所以iaddq很有必要，毕竟是两条变一条嘛
+                            | # （占据的话虽然从平均来说还是差不多，但是总体还是会多两条）
+                            | #
+                            | # emmm说个题外话，受第三章影响，我潜意识觉得用结束地址来计算是最高效的
+                            | # 然而这是建立在有leaq和cmp的基础之上的（
+                            | # 在y86-64中，能靠and自己判断是最好的，因为不需要花一条指令拷贝
+                            | # 在y86-64中，没有乘和leaq，只能用三次连加算地址...
+                            | #
+                            | ##################################################################
+                            | # Do not modify this portion
+                            | # Function prologue.
+                            | # %rdi = src, %rsi = dst, %rdx = len
+0x000:                      | ncopy:
+                            | 
+                            | ##################################################################
+                            | # You can modify this portion
+                            | 	# Loop header
+0x000: 6300                 | 	xorq %rax,%rax		# count = 0;
+0x002: 705200000000000000   |     jmp Test
+0x00b:                      | Loop:
+0x00b: 50a70000000000000000 |     mrmovq (%rdi), %r10	# read val from src...
+0x015: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x01f: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x021: 713400000000000000   | 	jle Npos		# if so, goto Npos:
+0x02a: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x034:                      | Npos:
+0x034: c0f2ffffffffffffffff | 	iaddq $-1, %rdx		# len--
+0x03e: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x048: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x052:                      | Test:
+0x052: 6222                 | 	andq %rdx,%rdx		# len > 0?
+0x054: 760b00000000000000   | 	jg Loop			# if so, goto Loop:
+                            | ##################################################################
+                            | # Do not modify the following section of code
+                            | # Function epilogue.
+0x05d:                      | Done:
+0x05d: 90                   | 	ret
+                            | ##################################################################
+                            | # Keep the following label at the end of your function
+0x05e:                      | End:
+                            | #/* $end ncopy-ys */

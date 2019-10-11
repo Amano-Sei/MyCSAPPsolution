@@ -1,0 +1,41 @@
+                            | # Amano Sei
+                            | # 2019-10-10 四 下 比起计算机专业的和其他专业会编程的话，我们和他们有什么区别这种问题...
+                            | # 说实话，我完全感觉不到这些，我烦恼的是，我曾经相信垃圾都是因为不努力才变成垃圾的
+                            | # 但是如果垃圾也努力的话，我和垃圾又有什么区别呢（
+                            | # rsum.ys
+                            | # long rsum_list(list_ptr ls);
+                            | 
+0x000: 30f40002000000000000 | irmovq  Stack, %rsp
+0x00a: 30f70001000000000000 | irmovq  ele1, %rdi
+0x014: 801e00000000000000   | call    rsum_list
+0x01d: 00                   | halt
+                            | 
+0x01e:                      | rsum_list:
+0x01e: a03f                 |     pushq   %rbx
+0x020: 6300                 |     xorq    %rax, %rax
+0x022: 6277                 |     andq    %rdi, %rdi
+0x024: 735800000000000000   |     je      toret
+0x02d: 50370000000000000000 |     mrmovq  (%rdi), %rbx
+0x037: 30f80800000000000000 |     irmovq  $8, %r8
+0x041: 6087                 |     addq    %r8, %rdi
+0x043: 50770000000000000000 |     mrmovq  (%rdi), %rdi
+0x04d: 801e00000000000000   |     call    rsum_list
+0x056: 6030                 |     addq    %rbx, %rax
+0x058:                      | toret:
+0x058: b03f                 |     popq    %rbx
+0x05a: 90                   |     ret
+                            | 
+0x100:                      | .pos 0x100
+0x100:                      | .align 8
+0x100:                      | ele1:
+0x100: 0a00000000000000     |     .quad 0x00a
+0x108: 1001000000000000     |     .quad ele2
+0x110:                      | ele2:
+0x110: b000000000000000     |     .quad 0x0b0
+0x118: 2001000000000000     |     .quad ele3
+0x120:                      | ele3:
+0x120: 000c000000000000     |     .quad 0xc00
+0x128: 0000000000000000     |     .quad 0
+                            | 
+0x200:                      | .pos 0x200
+0x200:                      | Stack:

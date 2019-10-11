@@ -1,0 +1,1122 @@
+                            | #######################################################################
+                            | # Test for copying block of size 471;
+                            | #######################################################################
+0x000:                      | 	.pos 0
+0x000: 30f40820000000000000 | main:	irmovq Stack, %rsp  	# Set up stack pointer
+                            | 
+                            | 	# Set up arguments for copy function and then invoke it
+0x00a: 30f2d701000000000000 | 	irmovq $471, %rdx		# src and dst have 471 elements
+0x014: 30f6c810000000000000 | 	irmovq dest, %rsi	# dst array
+0x01e: 30f70002000000000000 | 	irmovq src, %rdi	# src array
+0x028: 803b00000000000000   | 	call ncopy		 
+0x031: 809900000000000000   | 	call check	        # Call checker code
+0x03a: 00                   | 	halt                    # should halt with 0xaaaa in %rax
+0x03b:                      | StartFun:
+                            | #/* $begin ncopy-ys */
+                            | ##################################################################
+                            | # ncopy.ys - Copy a src block of len words to dst.
+                            | # Return the number of positive words (>0) contained in src.
+                            | #
+                            | # Amano Sei
+                            | #
+                            | # emmm，怎么说呢，这次的lab在做完homework的情况下完全没有难度啊（
+                            | # 不过还是简单说下吧
+                            | # 首先，我们的pipeline是默认判断跳转执行的，
+                            | # 所以把第一次判断和循环的进行合并
+                            | # （不过如果做好前向不跳，后向跳的判断的话肯定是本来比较好）
+                            | # 然后，这是我在用y86-64写程序的时候的感想
+                            | # 如果常数占据寄存器的话，寄存器的数量瞬间就感觉很紧张（
+                            | # 如果不固定占用的话，重复初始化很浪费时钟周期
+                            | # 所以iaddq很有必要，毕竟是两条变一条嘛
+                            | # （占据的话虽然从平均来说还是差不多，但是总体还是会多两条）
+                            | #
+                            | # emmm说个题外话，受第三章影响，我潜意识觉得用结束地址来计算是最高效的
+                            | # 然而这是建立在有leaq和cmp的基础之上的（
+                            | # 在y86-64中，能靠and自己判断是最好的，因为不需要花一条指令拷贝
+                            | # 在y86-64中，没有乘和leaq，只能用三次连加算地址...
+                            | #
+                            | ##################################################################
+                            | # Do not modify this portion
+                            | # Function prologue.
+                            | # %rdi = src, %rsi = dst, %rdx = len
+0x03b:                      | ncopy:
+                            | 
+                            | ##################################################################
+                            | # You can modify this portion
+                            | 	# Loop header
+0x03b: 6300                 | 	xorq %rax,%rax		# count = 0;
+0x03d: 6222                 | 	andq %rdx,%rdx		# len > 0?
+0x03f: 708f00000000000000   |     jmp Test
+0x048:                      | Loop:
+0x048: 50a70000000000000000 |     mrmovq (%rdi), %r10	# read val from src...
+0x052: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x05c: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x05e: 717100000000000000   | 	jle Npos		# if so, goto Npos:
+0x067: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x071:                      | Npos:
+0x071: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x07b: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x085: c0f2ffffffffffffffff | 	iaddq $-1, %rdx		# len--
+0x08f:                      | Test:
+0x08f: 764800000000000000   | 	jg Loop			# if so, goto Loop:
+                            | ##################################################################
+                            | # Do not modify the following section of code
+                            | # Function epilogue.
+0x098:                      | Done:
+0x098: 90                   | 	ret
+                            | ##################################################################
+                            | # Keep the following label at the end of your function
+0x099:                      | End:
+                            | #/* $end ncopy-ys */
+0x099:                      | EndFun:
+                            | #################################################################### 
+                            | # Epilogue code for the correctness testing driver
+                            | ####################################################################
+                            | 
+                            | # This is the correctness checking code.
+                            | # It checks:
+                            | #   1. %rax has 247.  Set %rax to 0xbbbb if not.
+                            | #   2. The total length of the code is less than or equal to 1000.
+                            | #      Set %rax to 0xcccc if not.
+                            | #   3. The source data was copied to the destination.
+                            | #      Set %rax to 0xdddd if not.
+                            | #   4. The words just before and just after the destination region
+                            | #      were not corrupted.  Set %rax to 0xeeee if not.
+                            | # If all checks pass, then sets %rax to 0xaaaa
+0x099:                      | check:
+                            | 	# Return value test
+0x099: 30faf700000000000000 | 	irmovq $247,%r10
+0x0a3: 61a0                 | 	subq %r10,%rax
+0x0a5: 73c100000000000000   | 	je checkb
+0x0ae: 30f0bbbb000000000000 | 	irmovq $0xbbbb,%rax  # Failed test #1
+0x0b8: 70ff01000000000000   | 	jmp cdone
+0x0c1:                      | checkb:
+                            | 	# Code length check
+0x0c1: 30f09900000000000000 | 	irmovq EndFun,%rax
+0x0cb: 30f23b00000000000000 | 	irmovq StartFun,%rdx
+0x0d5: 6120                 | 	subq %rdx,%rax
+0x0d7: 30f2e803000000000000 | 	irmovq $1000,%rdx
+0x0e1: 6102                 | 	subq %rax,%rdx
+0x0e3: 75ff00000000000000   | 	jge checkm
+0x0ec: 30f0cccc000000000000 | 	irmovq $0xcccc,%rax  # Failed test #2
+0x0f6: 70ff01000000000000   | 	jmp cdone
+0x0ff:                      | checkm:
+0x0ff: 30f2c810000000000000 | 	irmovq dest, %rdx # Pointer to next destination location
+0x109: 30f30002000000000000 | 	irmovq src,%rbx   # Pointer to next source location
+0x113: 30f7d701000000000000 | 	irmovq $471,%rdi  # Count
+0x11d: 6277                 | 	andq %rdi,%rdi
+0x11f: 737d01000000000000   | 	je checkpre         # Skip check if count = 0
+0x128:                      | mcloop:
+0x128: 50020000000000000000 | 	mrmovq (%rdx),%rax
+0x132: 50630000000000000000 | 	mrmovq (%rbx),%rsi
+0x13c: 6160                 | 	subq %rsi,%rax
+0x13e: 735a01000000000000   | 	je  mok
+0x147: 30f0dddd000000000000 | 	irmovq $0xdddd,%rax # Failed test #3
+0x151: 70ff01000000000000   | 	jmp cdone
+0x15a:                      | mok:
+0x15a: 30f00800000000000000 | 	irmovq $8,%rax
+0x164: 6002                 | 	addq %rax,%rdx	  # dest ++
+0x166: 6003                 | 	addq %rax,%rbx    # src++
+0x168: 30f00100000000000000 | 	irmovq $1,%rax
+0x172: 6107                 | 	subq %rax,%rdi    # cnt--
+0x174: 762801000000000000   | 	jg mcloop
+0x17d:                      | checkpre:
+                            | 	# Check for corruption
+0x17d: 30f2c010000000000000 | 	irmovq Predest,%rdx
+0x187: 50020000000000000000 | 	mrmovq (%rdx), %rax  # Get word before destination
+0x191: 30f2fadebc0000000000 | 	irmovq $0xbcdefa, %rdx
+0x19b: 6120                 | 	subq %rdx,%rax
+0x19d: 73b901000000000000   | 	je checkpost
+0x1a6: 30f0eeee000000000000 | 	irmovq $0xeeee,%rax  # Failed test #4
+0x1b0: 70ff01000000000000   | 	jmp cdone
+0x1b9:                      | checkpost:
+                            | 	# Check for corruption
+0x1b9: 30f2801f000000000000 | 	irmovq Postdest,%rdx
+0x1c3: 50020000000000000000 | 	mrmovq (%rdx), %rax  # Get word after destination
+0x1cd: 30f2bcfade0000000000 | 	irmovq $0xdefabc, %rdx
+0x1d7: 6120                 | 	subq %rdx,%rax
+0x1d9: 73f501000000000000   | 	je checkok
+0x1e2: 30f0eeee000000000000 | 	irmovq $0xeeee,%rax # Failed test #4
+0x1ec: 70ff01000000000000   | 	jmp cdone
+0x1f5:                      | checkok:
+                            | 	# Successful checks
+0x1f5: 30f0aaaa000000000000 | 	irmovq $0xaaaa,%rax
+0x1ff:                      | cdone:
+0x1ff: 90                   | 	ret
+                            | 
+                            | ###############################
+                            | # Source and destination blocks 
+                            | ###############################
+0x200:                      | 	.align 8
+0x200:                      | src:
+0x200: 0100000000000000     | 	.quad 1
+0x208: feffffffffffffff     | 	.quad -2
+0x210: fdffffffffffffff     | 	.quad -3
+0x218: 0400000000000000     | 	.quad 4
+0x220: fbffffffffffffff     | 	.quad -5
+0x228: faffffffffffffff     | 	.quad -6
+0x230: 0700000000000000     | 	.quad 7
+0x238: 0800000000000000     | 	.quad 8
+0x240: f7ffffffffffffff     | 	.quad -9
+0x248: 0a00000000000000     | 	.quad 10
+0x250: f5ffffffffffffff     | 	.quad -11
+0x258: f4ffffffffffffff     | 	.quad -12
+0x260: f3ffffffffffffff     | 	.quad -13
+0x268: f2ffffffffffffff     | 	.quad -14
+0x270: 0f00000000000000     | 	.quad 15
+0x278: 1000000000000000     | 	.quad 16
+0x280: efffffffffffffff     | 	.quad -17
+0x288: eeffffffffffffff     | 	.quad -18
+0x290: 1300000000000000     | 	.quad 19
+0x298: ecffffffffffffff     | 	.quad -20
+0x2a0: ebffffffffffffff     | 	.quad -21
+0x2a8: eaffffffffffffff     | 	.quad -22
+0x2b0: 1700000000000000     | 	.quad 23
+0x2b8: 1800000000000000     | 	.quad 24
+0x2c0: 1900000000000000     | 	.quad 25
+0x2c8: 1a00000000000000     | 	.quad 26
+0x2d0: 1b00000000000000     | 	.quad 27
+0x2d8: 1c00000000000000     | 	.quad 28
+0x2e0: 1d00000000000000     | 	.quad 29
+0x2e8: e2ffffffffffffff     | 	.quad -30
+0x2f0: 1f00000000000000     | 	.quad 31
+0x2f8: 2000000000000000     | 	.quad 32
+0x300: 2100000000000000     | 	.quad 33
+0x308: deffffffffffffff     | 	.quad -34
+0x310: 2300000000000000     | 	.quad 35
+0x318: 2400000000000000     | 	.quad 36
+0x320: dbffffffffffffff     | 	.quad -37
+0x328: 2600000000000000     | 	.quad 38
+0x330: 2700000000000000     | 	.quad 39
+0x338: d8ffffffffffffff     | 	.quad -40
+0x340: 2900000000000000     | 	.quad 41
+0x348: d6ffffffffffffff     | 	.quad -42
+0x350: d5ffffffffffffff     | 	.quad -43
+0x358: 2c00000000000000     | 	.quad 44
+0x360: d3ffffffffffffff     | 	.quad -45
+0x368: 2e00000000000000     | 	.quad 46
+0x370: d1ffffffffffffff     | 	.quad -47
+0x378: d0ffffffffffffff     | 	.quad -48
+0x380: 3100000000000000     | 	.quad 49
+0x388: 3200000000000000     | 	.quad 50
+0x390: cdffffffffffffff     | 	.quad -51
+0x398: 3400000000000000     | 	.quad 52
+0x3a0: 3500000000000000     | 	.quad 53
+0x3a8: 3600000000000000     | 	.quad 54
+0x3b0: 3700000000000000     | 	.quad 55
+0x3b8: 3800000000000000     | 	.quad 56
+0x3c0: 3900000000000000     | 	.quad 57
+0x3c8: c6ffffffffffffff     | 	.quad -58
+0x3d0: 3b00000000000000     | 	.quad 59
+0x3d8: 3c00000000000000     | 	.quad 60
+0x3e0: 3d00000000000000     | 	.quad 61
+0x3e8: 3e00000000000000     | 	.quad 62
+0x3f0: 3f00000000000000     | 	.quad 63
+0x3f8: c0ffffffffffffff     | 	.quad -64
+0x400: bfffffffffffffff     | 	.quad -65
+0x408: beffffffffffffff     | 	.quad -66
+0x410: bdffffffffffffff     | 	.quad -67
+0x418: 4400000000000000     | 	.quad 68
+0x420: bbffffffffffffff     | 	.quad -69
+0x428: 4600000000000000     | 	.quad 70
+0x430: 4700000000000000     | 	.quad 71
+0x438: 4800000000000000     | 	.quad 72
+0x440: b7ffffffffffffff     | 	.quad -73
+0x448: 4a00000000000000     | 	.quad 74
+0x450: 4b00000000000000     | 	.quad 75
+0x458: b4ffffffffffffff     | 	.quad -76
+0x460: 4d00000000000000     | 	.quad 77
+0x468: 4e00000000000000     | 	.quad 78
+0x470: b1ffffffffffffff     | 	.quad -79
+0x478: 5000000000000000     | 	.quad 80
+0x480: 5100000000000000     | 	.quad 81
+0x488: aeffffffffffffff     | 	.quad -82
+0x490: adffffffffffffff     | 	.quad -83
+0x498: acffffffffffffff     | 	.quad -84
+0x4a0: 5500000000000000     | 	.quad 85
+0x4a8: aaffffffffffffff     | 	.quad -86
+0x4b0: 5700000000000000     | 	.quad 87
+0x4b8: 5800000000000000     | 	.quad 88
+0x4c0: a7ffffffffffffff     | 	.quad -89
+0x4c8: a6ffffffffffffff     | 	.quad -90
+0x4d0: a5ffffffffffffff     | 	.quad -91
+0x4d8: a4ffffffffffffff     | 	.quad -92
+0x4e0: 5d00000000000000     | 	.quad 93
+0x4e8: a2ffffffffffffff     | 	.quad -94
+0x4f0: a1ffffffffffffff     | 	.quad -95
+0x4f8: 6000000000000000     | 	.quad 96
+0x500: 9fffffffffffffff     | 	.quad -97
+0x508: 9effffffffffffff     | 	.quad -98
+0x510: 9dffffffffffffff     | 	.quad -99
+0x518: 9cffffffffffffff     | 	.quad -100
+0x520: 6500000000000000     | 	.quad 101
+0x528: 6600000000000000     | 	.quad 102
+0x530: 6700000000000000     | 	.quad 103
+0x538: 98ffffffffffffff     | 	.quad -104
+0x540: 97ffffffffffffff     | 	.quad -105
+0x548: 6a00000000000000     | 	.quad 106
+0x550: 6b00000000000000     | 	.quad 107
+0x558: 94ffffffffffffff     | 	.quad -108
+0x560: 6d00000000000000     | 	.quad 109
+0x568: 92ffffffffffffff     | 	.quad -110
+0x570: 6f00000000000000     | 	.quad 111
+0x578: 7000000000000000     | 	.quad 112
+0x580: 8fffffffffffffff     | 	.quad -113
+0x588: 8effffffffffffff     | 	.quad -114
+0x590: 8dffffffffffffff     | 	.quad -115
+0x598: 8cffffffffffffff     | 	.quad -116
+0x5a0: 8bffffffffffffff     | 	.quad -117
+0x5a8: 8affffffffffffff     | 	.quad -118
+0x5b0: 7700000000000000     | 	.quad 119
+0x5b8: 88ffffffffffffff     | 	.quad -120
+0x5c0: 87ffffffffffffff     | 	.quad -121
+0x5c8: 7a00000000000000     | 	.quad 122
+0x5d0: 85ffffffffffffff     | 	.quad -123
+0x5d8: 7c00000000000000     | 	.quad 124
+0x5e0: 7d00000000000000     | 	.quad 125
+0x5e8: 82ffffffffffffff     | 	.quad -126
+0x5f0: 7f00000000000000     | 	.quad 127
+0x5f8: 80ffffffffffffff     | 	.quad -128
+0x600: 8100000000000000     | 	.quad 129
+0x608: 8200000000000000     | 	.quad 130
+0x610: 7dffffffffffffff     | 	.quad -131
+0x618: 8400000000000000     | 	.quad 132
+0x620: 8500000000000000     | 	.quad 133
+0x628: 7affffffffffffff     | 	.quad -134
+0x630: 79ffffffffffffff     | 	.quad -135
+0x638: 78ffffffffffffff     | 	.quad -136
+0x640: 77ffffffffffffff     | 	.quad -137
+0x648: 76ffffffffffffff     | 	.quad -138
+0x650: 8b00000000000000     | 	.quad 139
+0x658: 8c00000000000000     | 	.quad 140
+0x660: 73ffffffffffffff     | 	.quad -141
+0x668: 8e00000000000000     | 	.quad 142
+0x670: 71ffffffffffffff     | 	.quad -143
+0x678: 9000000000000000     | 	.quad 144
+0x680: 6fffffffffffffff     | 	.quad -145
+0x688: 9200000000000000     | 	.quad 146
+0x690: 6dffffffffffffff     | 	.quad -147
+0x698: 6cffffffffffffff     | 	.quad -148
+0x6a0: 6bffffffffffffff     | 	.quad -149
+0x6a8: 9600000000000000     | 	.quad 150
+0x6b0: 9700000000000000     | 	.quad 151
+0x6b8: 9800000000000000     | 	.quad 152
+0x6c0: 9900000000000000     | 	.quad 153
+0x6c8: 66ffffffffffffff     | 	.quad -154
+0x6d0: 9b00000000000000     | 	.quad 155
+0x6d8: 9c00000000000000     | 	.quad 156
+0x6e0: 63ffffffffffffff     | 	.quad -157
+0x6e8: 9e00000000000000     | 	.quad 158
+0x6f0: 9f00000000000000     | 	.quad 159
+0x6f8: a000000000000000     | 	.quad 160
+0x700: a100000000000000     | 	.quad 161
+0x708: a200000000000000     | 	.quad 162
+0x710: 5dffffffffffffff     | 	.quad -163
+0x718: 5cffffffffffffff     | 	.quad -164
+0x720: 5bffffffffffffff     | 	.quad -165
+0x728: a600000000000000     | 	.quad 166
+0x730: a700000000000000     | 	.quad 167
+0x738: a800000000000000     | 	.quad 168
+0x740: a900000000000000     | 	.quad 169
+0x748: 56ffffffffffffff     | 	.quad -170
+0x750: 55ffffffffffffff     | 	.quad -171
+0x758: ac00000000000000     | 	.quad 172
+0x760: ad00000000000000     | 	.quad 173
+0x768: 52ffffffffffffff     | 	.quad -174
+0x770: af00000000000000     | 	.quad 175
+0x778: b000000000000000     | 	.quad 176
+0x780: b100000000000000     | 	.quad 177
+0x788: b200000000000000     | 	.quad 178
+0x790: b300000000000000     | 	.quad 179
+0x798: b400000000000000     | 	.quad 180
+0x7a0: 4bffffffffffffff     | 	.quad -181
+0x7a8: b600000000000000     | 	.quad 182
+0x7b0: b700000000000000     | 	.quad 183
+0x7b8: b800000000000000     | 	.quad 184
+0x7c0: b900000000000000     | 	.quad 185
+0x7c8: 46ffffffffffffff     | 	.quad -186
+0x7d0: 45ffffffffffffff     | 	.quad -187
+0x7d8: 44ffffffffffffff     | 	.quad -188
+0x7e0: 43ffffffffffffff     | 	.quad -189
+0x7e8: 42ffffffffffffff     | 	.quad -190
+0x7f0: 41ffffffffffffff     | 	.quad -191
+0x7f8: c000000000000000     | 	.quad 192
+0x800: c100000000000000     | 	.quad 193
+0x808: 3effffffffffffff     | 	.quad -194
+0x810: 3dffffffffffffff     | 	.quad -195
+0x818: c400000000000000     | 	.quad 196
+0x820: c500000000000000     | 	.quad 197
+0x828: c600000000000000     | 	.quad 198
+0x830: c700000000000000     | 	.quad 199
+0x838: c800000000000000     | 	.quad 200
+0x840: c900000000000000     | 	.quad 201
+0x848: 36ffffffffffffff     | 	.quad -202
+0x850: 35ffffffffffffff     | 	.quad -203
+0x858: cc00000000000000     | 	.quad 204
+0x860: 33ffffffffffffff     | 	.quad -205
+0x868: 32ffffffffffffff     | 	.quad -206
+0x870: 31ffffffffffffff     | 	.quad -207
+0x878: 30ffffffffffffff     | 	.quad -208
+0x880: d100000000000000     | 	.quad 209
+0x888: 2effffffffffffff     | 	.quad -210
+0x890: 2dffffffffffffff     | 	.quad -211
+0x898: 2cffffffffffffff     | 	.quad -212
+0x8a0: 2bffffffffffffff     | 	.quad -213
+0x8a8: d600000000000000     | 	.quad 214
+0x8b0: d700000000000000     | 	.quad 215
+0x8b8: 28ffffffffffffff     | 	.quad -216
+0x8c0: d900000000000000     | 	.quad 217
+0x8c8: 26ffffffffffffff     | 	.quad -218
+0x8d0: 25ffffffffffffff     | 	.quad -219
+0x8d8: 24ffffffffffffff     | 	.quad -220
+0x8e0: dd00000000000000     | 	.quad 221
+0x8e8: de00000000000000     | 	.quad 222
+0x8f0: df00000000000000     | 	.quad 223
+0x8f8: 20ffffffffffffff     | 	.quad -224
+0x900: e100000000000000     | 	.quad 225
+0x908: e200000000000000     | 	.quad 226
+0x910: e300000000000000     | 	.quad 227
+0x918: e400000000000000     | 	.quad 228
+0x920: 1bffffffffffffff     | 	.quad -229
+0x928: e600000000000000     | 	.quad 230
+0x930: 19ffffffffffffff     | 	.quad -231
+0x938: 18ffffffffffffff     | 	.quad -232
+0x940: e900000000000000     | 	.quad 233
+0x948: ea00000000000000     | 	.quad 234
+0x950: 15ffffffffffffff     | 	.quad -235
+0x958: ec00000000000000     | 	.quad 236
+0x960: 13ffffffffffffff     | 	.quad -237
+0x968: 12ffffffffffffff     | 	.quad -238
+0x970: 11ffffffffffffff     | 	.quad -239
+0x978: 10ffffffffffffff     | 	.quad -240
+0x980: 0fffffffffffffff     | 	.quad -241
+0x988: 0effffffffffffff     | 	.quad -242
+0x990: 0dffffffffffffff     | 	.quad -243
+0x998: f400000000000000     | 	.quad 244
+0x9a0: 0bffffffffffffff     | 	.quad -245
+0x9a8: f600000000000000     | 	.quad 246
+0x9b0: f700000000000000     | 	.quad 247
+0x9b8: f800000000000000     | 	.quad 248
+0x9c0: 07ffffffffffffff     | 	.quad -249
+0x9c8: 06ffffffffffffff     | 	.quad -250
+0x9d0: 05ffffffffffffff     | 	.quad -251
+0x9d8: fc00000000000000     | 	.quad 252
+0x9e0: fd00000000000000     | 	.quad 253
+0x9e8: 02ffffffffffffff     | 	.quad -254
+0x9f0: ff00000000000000     | 	.quad 255
+0x9f8: 0001000000000000     | 	.quad 256
+0xa00: fffeffffffffffff     | 	.quad -257
+0xa08: 0201000000000000     | 	.quad 258
+0xa10: 0301000000000000     | 	.quad 259
+0xa18: fcfeffffffffffff     | 	.quad -260
+0xa20: fbfeffffffffffff     | 	.quad -261
+0xa28: 0601000000000000     | 	.quad 262
+0xa30: 0701000000000000     | 	.quad 263
+0xa38: 0801000000000000     | 	.quad 264
+0xa40: f7feffffffffffff     | 	.quad -265
+0xa48: 0a01000000000000     | 	.quad 266
+0xa50: f5feffffffffffff     | 	.quad -267
+0xa58: 0c01000000000000     | 	.quad 268
+0xa60: 0d01000000000000     | 	.quad 269
+0xa68: 0e01000000000000     | 	.quad 270
+0xa70: 0f01000000000000     | 	.quad 271
+0xa78: 1001000000000000     | 	.quad 272
+0xa80: 1101000000000000     | 	.quad 273
+0xa88: 1201000000000000     | 	.quad 274
+0xa90: edfeffffffffffff     | 	.quad -275
+0xa98: ecfeffffffffffff     | 	.quad -276
+0xaa0: ebfeffffffffffff     | 	.quad -277
+0xaa8: eafeffffffffffff     | 	.quad -278
+0xab0: 1701000000000000     | 	.quad 279
+0xab8: e8feffffffffffff     | 	.quad -280
+0xac0: 1901000000000000     | 	.quad 281
+0xac8: e6feffffffffffff     | 	.quad -282
+0xad0: e5feffffffffffff     | 	.quad -283
+0xad8: 1c01000000000000     | 	.quad 284
+0xae0: e3feffffffffffff     | 	.quad -285
+0xae8: 1e01000000000000     | 	.quad 286
+0xaf0: e1feffffffffffff     | 	.quad -287
+0xaf8: 2001000000000000     | 	.quad 288
+0xb00: 2101000000000000     | 	.quad 289
+0xb08: defeffffffffffff     | 	.quad -290
+0xb10: 2301000000000000     | 	.quad 291
+0xb18: 2401000000000000     | 	.quad 292
+0xb20: dbfeffffffffffff     | 	.quad -293
+0xb28: 2601000000000000     | 	.quad 294
+0xb30: d9feffffffffffff     | 	.quad -295
+0xb38: d8feffffffffffff     | 	.quad -296
+0xb40: 2901000000000000     | 	.quad 297
+0xb48: d6feffffffffffff     | 	.quad -298
+0xb50: 2b01000000000000     | 	.quad 299
+0xb58: d4feffffffffffff     | 	.quad -300
+0xb60: d3feffffffffffff     | 	.quad -301
+0xb68: d2feffffffffffff     | 	.quad -302
+0xb70: d1feffffffffffff     | 	.quad -303
+0xb78: d0feffffffffffff     | 	.quad -304
+0xb80: cffeffffffffffff     | 	.quad -305
+0xb88: 3201000000000000     | 	.quad 306
+0xb90: 3301000000000000     | 	.quad 307
+0xb98: 3401000000000000     | 	.quad 308
+0xba0: cbfeffffffffffff     | 	.quad -309
+0xba8: 3601000000000000     | 	.quad 310
+0xbb0: 3701000000000000     | 	.quad 311
+0xbb8: c8feffffffffffff     | 	.quad -312
+0xbc0: c7feffffffffffff     | 	.quad -313
+0xbc8: c6feffffffffffff     | 	.quad -314
+0xbd0: 3b01000000000000     | 	.quad 315
+0xbd8: 3c01000000000000     | 	.quad 316
+0xbe0: 3d01000000000000     | 	.quad 317
+0xbe8: 3e01000000000000     | 	.quad 318
+0xbf0: c1feffffffffffff     | 	.quad -319
+0xbf8: c0feffffffffffff     | 	.quad -320
+0xc00: bffeffffffffffff     | 	.quad -321
+0xc08: 4201000000000000     | 	.quad 322
+0xc10: 4301000000000000     | 	.quad 323
+0xc18: bcfeffffffffffff     | 	.quad -324
+0xc20: bbfeffffffffffff     | 	.quad -325
+0xc28: 4601000000000000     | 	.quad 326
+0xc30: b9feffffffffffff     | 	.quad -327
+0xc38: 4801000000000000     | 	.quad 328
+0xc40: b7feffffffffffff     | 	.quad -329
+0xc48: 4a01000000000000     | 	.quad 330
+0xc50: b5feffffffffffff     | 	.quad -331
+0xc58: 4c01000000000000     | 	.quad 332
+0xc60: b3feffffffffffff     | 	.quad -333
+0xc68: b2feffffffffffff     | 	.quad -334
+0xc70: 4f01000000000000     | 	.quad 335
+0xc78: b0feffffffffffff     | 	.quad -336
+0xc80: 5101000000000000     | 	.quad 337
+0xc88: aefeffffffffffff     | 	.quad -338
+0xc90: adfeffffffffffff     | 	.quad -339
+0xc98: acfeffffffffffff     | 	.quad -340
+0xca0: 5501000000000000     | 	.quad 341
+0xca8: aafeffffffffffff     | 	.quad -342
+0xcb0: a9feffffffffffff     | 	.quad -343
+0xcb8: a8feffffffffffff     | 	.quad -344
+0xcc0: a7feffffffffffff     | 	.quad -345
+0xcc8: a6feffffffffffff     | 	.quad -346
+0xcd0: 5b01000000000000     | 	.quad 347
+0xcd8: 5c01000000000000     | 	.quad 348
+0xce0: 5d01000000000000     | 	.quad 349
+0xce8: 5e01000000000000     | 	.quad 350
+0xcf0: 5f01000000000000     | 	.quad 351
+0xcf8: a0feffffffffffff     | 	.quad -352
+0xd00: 6101000000000000     | 	.quad 353
+0xd08: 9efeffffffffffff     | 	.quad -354
+0xd10: 6301000000000000     | 	.quad 355
+0xd18: 6401000000000000     | 	.quad 356
+0xd20: 9bfeffffffffffff     | 	.quad -357
+0xd28: 6601000000000000     | 	.quad 358
+0xd30: 6701000000000000     | 	.quad 359
+0xd38: 6801000000000000     | 	.quad 360
+0xd40: 97feffffffffffff     | 	.quad -361
+0xd48: 6a01000000000000     | 	.quad 362
+0xd50: 6b01000000000000     | 	.quad 363
+0xd58: 6c01000000000000     | 	.quad 364
+0xd60: 93feffffffffffff     | 	.quad -365
+0xd68: 6e01000000000000     | 	.quad 366
+0xd70: 6f01000000000000     | 	.quad 367
+0xd78: 7001000000000000     | 	.quad 368
+0xd80: 8ffeffffffffffff     | 	.quad -369
+0xd88: 7201000000000000     | 	.quad 370
+0xd90: 8dfeffffffffffff     | 	.quad -371
+0xd98: 8cfeffffffffffff     | 	.quad -372
+0xda0: 7501000000000000     | 	.quad 373
+0xda8: 7601000000000000     | 	.quad 374
+0xdb0: 7701000000000000     | 	.quad 375
+0xdb8: 88feffffffffffff     | 	.quad -376
+0xdc0: 7901000000000000     | 	.quad 377
+0xdc8: 86feffffffffffff     | 	.quad -378
+0xdd0: 85feffffffffffff     | 	.quad -379
+0xdd8: 84feffffffffffff     | 	.quad -380
+0xde0: 83feffffffffffff     | 	.quad -381
+0xde8: 82feffffffffffff     | 	.quad -382
+0xdf0: 7f01000000000000     | 	.quad 383
+0xdf8: 80feffffffffffff     | 	.quad -384
+0xe00: 7ffeffffffffffff     | 	.quad -385
+0xe08: 7efeffffffffffff     | 	.quad -386
+0xe10: 8301000000000000     | 	.quad 387
+0xe18: 8401000000000000     | 	.quad 388
+0xe20: 7bfeffffffffffff     | 	.quad -389
+0xe28: 8601000000000000     | 	.quad 390
+0xe30: 79feffffffffffff     | 	.quad -391
+0xe38: 78feffffffffffff     | 	.quad -392
+0xe40: 77feffffffffffff     | 	.quad -393
+0xe48: 8a01000000000000     | 	.quad 394
+0xe50: 75feffffffffffff     | 	.quad -395
+0xe58: 8c01000000000000     | 	.quad 396
+0xe60: 8d01000000000000     | 	.quad 397
+0xe68: 72feffffffffffff     | 	.quad -398
+0xe70: 71feffffffffffff     | 	.quad -399
+0xe78: 70feffffffffffff     | 	.quad -400
+0xe80: 9101000000000000     | 	.quad 401
+0xe88: 9201000000000000     | 	.quad 402
+0xe90: 9301000000000000     | 	.quad 403
+0xe98: 6cfeffffffffffff     | 	.quad -404
+0xea0: 9501000000000000     | 	.quad 405
+0xea8: 6afeffffffffffff     | 	.quad -406
+0xeb0: 9701000000000000     | 	.quad 407
+0xeb8: 9801000000000000     | 	.quad 408
+0xec0: 67feffffffffffff     | 	.quad -409
+0xec8: 9a01000000000000     | 	.quad 410
+0xed0: 9b01000000000000     | 	.quad 411
+0xed8: 64feffffffffffff     | 	.quad -412
+0xee0: 9d01000000000000     | 	.quad 413
+0xee8: 62feffffffffffff     | 	.quad -414
+0xef0: 9f01000000000000     | 	.quad 415
+0xef8: a001000000000000     | 	.quad 416
+0xf00: 5ffeffffffffffff     | 	.quad -417
+0xf08: 5efeffffffffffff     | 	.quad -418
+0xf10: a301000000000000     | 	.quad 419
+0xf18: 5cfeffffffffffff     | 	.quad -420
+0xf20: 5bfeffffffffffff     | 	.quad -421
+0xf28: a601000000000000     | 	.quad 422
+0xf30: a701000000000000     | 	.quad 423
+0xf38: a801000000000000     | 	.quad 424
+0xf40: a901000000000000     | 	.quad 425
+0xf48: aa01000000000000     | 	.quad 426
+0xf50: ab01000000000000     | 	.quad 427
+0xf58: 54feffffffffffff     | 	.quad -428
+0xf60: 53feffffffffffff     | 	.quad -429
+0xf68: 52feffffffffffff     | 	.quad -430
+0xf70: 51feffffffffffff     | 	.quad -431
+0xf78: b001000000000000     | 	.quad 432
+0xf80: b101000000000000     | 	.quad 433
+0xf88: b201000000000000     | 	.quad 434
+0xf90: b301000000000000     | 	.quad 435
+0xf98: b401000000000000     | 	.quad 436
+0xfa0: 4bfeffffffffffff     | 	.quad -437
+0xfa8: b601000000000000     | 	.quad 438
+0xfb0: b701000000000000     | 	.quad 439
+0xfb8: 48feffffffffffff     | 	.quad -440
+0xfc0: b901000000000000     | 	.quad 441
+0xfc8: ba01000000000000     | 	.quad 442
+0xfd0: 45feffffffffffff     | 	.quad -443
+0xfd8: 44feffffffffffff     | 	.quad -444
+0xfe0: 43feffffffffffff     | 	.quad -445
+0xfe8: be01000000000000     | 	.quad 446
+0xff0: 41feffffffffffff     | 	.quad -447
+0xff8: 40feffffffffffff     | 	.quad -448
+0x1000:3ffeffffffffffff      | 	.quad -449
+0x1008:c201000000000000      | 	.quad 450
+0x1010:3dfeffffffffffff      | 	.quad -451
+0x1018:c401000000000000      | 	.quad 452
+0x1020:3bfeffffffffffff      | 	.quad -453
+0x1028:3afeffffffffffff      | 	.quad -454
+0x1030:c701000000000000      | 	.quad 455
+0x1038:38feffffffffffff      | 	.quad -456
+0x1040:c901000000000000      | 	.quad 457
+0x1048:ca01000000000000      | 	.quad 458
+0x1050:35feffffffffffff      | 	.quad -459
+0x1058:cc01000000000000      | 	.quad 460
+0x1060:cd01000000000000      | 	.quad 461
+0x1068:ce01000000000000      | 	.quad 462
+0x1070:31feffffffffffff      | 	.quad -463
+0x1078:d001000000000000      | 	.quad 464
+0x1080:d101000000000000      | 	.quad 465
+0x1088:2efeffffffffffff      | 	.quad -466
+0x1090:d301000000000000      | 	.quad 467
+0x1098:d401000000000000      | 	.quad 468
+0x10a0:d501000000000000      | 	.quad 469
+0x10a8:2afeffffffffffff      | 	.quad -470
+0x10b0:d701000000000000      | 	.quad 471
+0x10b8:fadebc0000000000      | 	.quad 0xbcdefa # This shouldn't get moved
+                             | 
+0x10c0:                      | 	.align 16
+0x10c0:                      | Predest:
+0x10c0:fadebc0000000000      | 	.quad 0xbcdefa
+0x10c8:                      | dest:
+0x10c8:abefcd0000000000      | 	.quad 0xcdefab
+0x10d0:abefcd0000000000      | 	.quad 0xcdefab
+0x10d8:abefcd0000000000      | 	.quad 0xcdefab
+0x10e0:abefcd0000000000      | 	.quad 0xcdefab
+0x10e8:abefcd0000000000      | 	.quad 0xcdefab
+0x10f0:abefcd0000000000      | 	.quad 0xcdefab
+0x10f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1100:abefcd0000000000      | 	.quad 0xcdefab
+0x1108:abefcd0000000000      | 	.quad 0xcdefab
+0x1110:abefcd0000000000      | 	.quad 0xcdefab
+0x1118:abefcd0000000000      | 	.quad 0xcdefab
+0x1120:abefcd0000000000      | 	.quad 0xcdefab
+0x1128:abefcd0000000000      | 	.quad 0xcdefab
+0x1130:abefcd0000000000      | 	.quad 0xcdefab
+0x1138:abefcd0000000000      | 	.quad 0xcdefab
+0x1140:abefcd0000000000      | 	.quad 0xcdefab
+0x1148:abefcd0000000000      | 	.quad 0xcdefab
+0x1150:abefcd0000000000      | 	.quad 0xcdefab
+0x1158:abefcd0000000000      | 	.quad 0xcdefab
+0x1160:abefcd0000000000      | 	.quad 0xcdefab
+0x1168:abefcd0000000000      | 	.quad 0xcdefab
+0x1170:abefcd0000000000      | 	.quad 0xcdefab
+0x1178:abefcd0000000000      | 	.quad 0xcdefab
+0x1180:abefcd0000000000      | 	.quad 0xcdefab
+0x1188:abefcd0000000000      | 	.quad 0xcdefab
+0x1190:abefcd0000000000      | 	.quad 0xcdefab
+0x1198:abefcd0000000000      | 	.quad 0xcdefab
+0x11a0:abefcd0000000000      | 	.quad 0xcdefab
+0x11a8:abefcd0000000000      | 	.quad 0xcdefab
+0x11b0:abefcd0000000000      | 	.quad 0xcdefab
+0x11b8:abefcd0000000000      | 	.quad 0xcdefab
+0x11c0:abefcd0000000000      | 	.quad 0xcdefab
+0x11c8:abefcd0000000000      | 	.quad 0xcdefab
+0x11d0:abefcd0000000000      | 	.quad 0xcdefab
+0x11d8:abefcd0000000000      | 	.quad 0xcdefab
+0x11e0:abefcd0000000000      | 	.quad 0xcdefab
+0x11e8:abefcd0000000000      | 	.quad 0xcdefab
+0x11f0:abefcd0000000000      | 	.quad 0xcdefab
+0x11f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1200:abefcd0000000000      | 	.quad 0xcdefab
+0x1208:abefcd0000000000      | 	.quad 0xcdefab
+0x1210:abefcd0000000000      | 	.quad 0xcdefab
+0x1218:abefcd0000000000      | 	.quad 0xcdefab
+0x1220:abefcd0000000000      | 	.quad 0xcdefab
+0x1228:abefcd0000000000      | 	.quad 0xcdefab
+0x1230:abefcd0000000000      | 	.quad 0xcdefab
+0x1238:abefcd0000000000      | 	.quad 0xcdefab
+0x1240:abefcd0000000000      | 	.quad 0xcdefab
+0x1248:abefcd0000000000      | 	.quad 0xcdefab
+0x1250:abefcd0000000000      | 	.quad 0xcdefab
+0x1258:abefcd0000000000      | 	.quad 0xcdefab
+0x1260:abefcd0000000000      | 	.quad 0xcdefab
+0x1268:abefcd0000000000      | 	.quad 0xcdefab
+0x1270:abefcd0000000000      | 	.quad 0xcdefab
+0x1278:abefcd0000000000      | 	.quad 0xcdefab
+0x1280:abefcd0000000000      | 	.quad 0xcdefab
+0x1288:abefcd0000000000      | 	.quad 0xcdefab
+0x1290:abefcd0000000000      | 	.quad 0xcdefab
+0x1298:abefcd0000000000      | 	.quad 0xcdefab
+0x12a0:abefcd0000000000      | 	.quad 0xcdefab
+0x12a8:abefcd0000000000      | 	.quad 0xcdefab
+0x12b0:abefcd0000000000      | 	.quad 0xcdefab
+0x12b8:abefcd0000000000      | 	.quad 0xcdefab
+0x12c0:abefcd0000000000      | 	.quad 0xcdefab
+0x12c8:abefcd0000000000      | 	.quad 0xcdefab
+0x12d0:abefcd0000000000      | 	.quad 0xcdefab
+0x12d8:abefcd0000000000      | 	.quad 0xcdefab
+0x12e0:abefcd0000000000      | 	.quad 0xcdefab
+0x12e8:abefcd0000000000      | 	.quad 0xcdefab
+0x12f0:abefcd0000000000      | 	.quad 0xcdefab
+0x12f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1300:abefcd0000000000      | 	.quad 0xcdefab
+0x1308:abefcd0000000000      | 	.quad 0xcdefab
+0x1310:abefcd0000000000      | 	.quad 0xcdefab
+0x1318:abefcd0000000000      | 	.quad 0xcdefab
+0x1320:abefcd0000000000      | 	.quad 0xcdefab
+0x1328:abefcd0000000000      | 	.quad 0xcdefab
+0x1330:abefcd0000000000      | 	.quad 0xcdefab
+0x1338:abefcd0000000000      | 	.quad 0xcdefab
+0x1340:abefcd0000000000      | 	.quad 0xcdefab
+0x1348:abefcd0000000000      | 	.quad 0xcdefab
+0x1350:abefcd0000000000      | 	.quad 0xcdefab
+0x1358:abefcd0000000000      | 	.quad 0xcdefab
+0x1360:abefcd0000000000      | 	.quad 0xcdefab
+0x1368:abefcd0000000000      | 	.quad 0xcdefab
+0x1370:abefcd0000000000      | 	.quad 0xcdefab
+0x1378:abefcd0000000000      | 	.quad 0xcdefab
+0x1380:abefcd0000000000      | 	.quad 0xcdefab
+0x1388:abefcd0000000000      | 	.quad 0xcdefab
+0x1390:abefcd0000000000      | 	.quad 0xcdefab
+0x1398:abefcd0000000000      | 	.quad 0xcdefab
+0x13a0:abefcd0000000000      | 	.quad 0xcdefab
+0x13a8:abefcd0000000000      | 	.quad 0xcdefab
+0x13b0:abefcd0000000000      | 	.quad 0xcdefab
+0x13b8:abefcd0000000000      | 	.quad 0xcdefab
+0x13c0:abefcd0000000000      | 	.quad 0xcdefab
+0x13c8:abefcd0000000000      | 	.quad 0xcdefab
+0x13d0:abefcd0000000000      | 	.quad 0xcdefab
+0x13d8:abefcd0000000000      | 	.quad 0xcdefab
+0x13e0:abefcd0000000000      | 	.quad 0xcdefab
+0x13e8:abefcd0000000000      | 	.quad 0xcdefab
+0x13f0:abefcd0000000000      | 	.quad 0xcdefab
+0x13f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1400:abefcd0000000000      | 	.quad 0xcdefab
+0x1408:abefcd0000000000      | 	.quad 0xcdefab
+0x1410:abefcd0000000000      | 	.quad 0xcdefab
+0x1418:abefcd0000000000      | 	.quad 0xcdefab
+0x1420:abefcd0000000000      | 	.quad 0xcdefab
+0x1428:abefcd0000000000      | 	.quad 0xcdefab
+0x1430:abefcd0000000000      | 	.quad 0xcdefab
+0x1438:abefcd0000000000      | 	.quad 0xcdefab
+0x1440:abefcd0000000000      | 	.quad 0xcdefab
+0x1448:abefcd0000000000      | 	.quad 0xcdefab
+0x1450:abefcd0000000000      | 	.quad 0xcdefab
+0x1458:abefcd0000000000      | 	.quad 0xcdefab
+0x1460:abefcd0000000000      | 	.quad 0xcdefab
+0x1468:abefcd0000000000      | 	.quad 0xcdefab
+0x1470:abefcd0000000000      | 	.quad 0xcdefab
+0x1478:abefcd0000000000      | 	.quad 0xcdefab
+0x1480:abefcd0000000000      | 	.quad 0xcdefab
+0x1488:abefcd0000000000      | 	.quad 0xcdefab
+0x1490:abefcd0000000000      | 	.quad 0xcdefab
+0x1498:abefcd0000000000      | 	.quad 0xcdefab
+0x14a0:abefcd0000000000      | 	.quad 0xcdefab
+0x14a8:abefcd0000000000      | 	.quad 0xcdefab
+0x14b0:abefcd0000000000      | 	.quad 0xcdefab
+0x14b8:abefcd0000000000      | 	.quad 0xcdefab
+0x14c0:abefcd0000000000      | 	.quad 0xcdefab
+0x14c8:abefcd0000000000      | 	.quad 0xcdefab
+0x14d0:abefcd0000000000      | 	.quad 0xcdefab
+0x14d8:abefcd0000000000      | 	.quad 0xcdefab
+0x14e0:abefcd0000000000      | 	.quad 0xcdefab
+0x14e8:abefcd0000000000      | 	.quad 0xcdefab
+0x14f0:abefcd0000000000      | 	.quad 0xcdefab
+0x14f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1500:abefcd0000000000      | 	.quad 0xcdefab
+0x1508:abefcd0000000000      | 	.quad 0xcdefab
+0x1510:abefcd0000000000      | 	.quad 0xcdefab
+0x1518:abefcd0000000000      | 	.quad 0xcdefab
+0x1520:abefcd0000000000      | 	.quad 0xcdefab
+0x1528:abefcd0000000000      | 	.quad 0xcdefab
+0x1530:abefcd0000000000      | 	.quad 0xcdefab
+0x1538:abefcd0000000000      | 	.quad 0xcdefab
+0x1540:abefcd0000000000      | 	.quad 0xcdefab
+0x1548:abefcd0000000000      | 	.quad 0xcdefab
+0x1550:abefcd0000000000      | 	.quad 0xcdefab
+0x1558:abefcd0000000000      | 	.quad 0xcdefab
+0x1560:abefcd0000000000      | 	.quad 0xcdefab
+0x1568:abefcd0000000000      | 	.quad 0xcdefab
+0x1570:abefcd0000000000      | 	.quad 0xcdefab
+0x1578:abefcd0000000000      | 	.quad 0xcdefab
+0x1580:abefcd0000000000      | 	.quad 0xcdefab
+0x1588:abefcd0000000000      | 	.quad 0xcdefab
+0x1590:abefcd0000000000      | 	.quad 0xcdefab
+0x1598:abefcd0000000000      | 	.quad 0xcdefab
+0x15a0:abefcd0000000000      | 	.quad 0xcdefab
+0x15a8:abefcd0000000000      | 	.quad 0xcdefab
+0x15b0:abefcd0000000000      | 	.quad 0xcdefab
+0x15b8:abefcd0000000000      | 	.quad 0xcdefab
+0x15c0:abefcd0000000000      | 	.quad 0xcdefab
+0x15c8:abefcd0000000000      | 	.quad 0xcdefab
+0x15d0:abefcd0000000000      | 	.quad 0xcdefab
+0x15d8:abefcd0000000000      | 	.quad 0xcdefab
+0x15e0:abefcd0000000000      | 	.quad 0xcdefab
+0x15e8:abefcd0000000000      | 	.quad 0xcdefab
+0x15f0:abefcd0000000000      | 	.quad 0xcdefab
+0x15f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1600:abefcd0000000000      | 	.quad 0xcdefab
+0x1608:abefcd0000000000      | 	.quad 0xcdefab
+0x1610:abefcd0000000000      | 	.quad 0xcdefab
+0x1618:abefcd0000000000      | 	.quad 0xcdefab
+0x1620:abefcd0000000000      | 	.quad 0xcdefab
+0x1628:abefcd0000000000      | 	.quad 0xcdefab
+0x1630:abefcd0000000000      | 	.quad 0xcdefab
+0x1638:abefcd0000000000      | 	.quad 0xcdefab
+0x1640:abefcd0000000000      | 	.quad 0xcdefab
+0x1648:abefcd0000000000      | 	.quad 0xcdefab
+0x1650:abefcd0000000000      | 	.quad 0xcdefab
+0x1658:abefcd0000000000      | 	.quad 0xcdefab
+0x1660:abefcd0000000000      | 	.quad 0xcdefab
+0x1668:abefcd0000000000      | 	.quad 0xcdefab
+0x1670:abefcd0000000000      | 	.quad 0xcdefab
+0x1678:abefcd0000000000      | 	.quad 0xcdefab
+0x1680:abefcd0000000000      | 	.quad 0xcdefab
+0x1688:abefcd0000000000      | 	.quad 0xcdefab
+0x1690:abefcd0000000000      | 	.quad 0xcdefab
+0x1698:abefcd0000000000      | 	.quad 0xcdefab
+0x16a0:abefcd0000000000      | 	.quad 0xcdefab
+0x16a8:abefcd0000000000      | 	.quad 0xcdefab
+0x16b0:abefcd0000000000      | 	.quad 0xcdefab
+0x16b8:abefcd0000000000      | 	.quad 0xcdefab
+0x16c0:abefcd0000000000      | 	.quad 0xcdefab
+0x16c8:abefcd0000000000      | 	.quad 0xcdefab
+0x16d0:abefcd0000000000      | 	.quad 0xcdefab
+0x16d8:abefcd0000000000      | 	.quad 0xcdefab
+0x16e0:abefcd0000000000      | 	.quad 0xcdefab
+0x16e8:abefcd0000000000      | 	.quad 0xcdefab
+0x16f0:abefcd0000000000      | 	.quad 0xcdefab
+0x16f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1700:abefcd0000000000      | 	.quad 0xcdefab
+0x1708:abefcd0000000000      | 	.quad 0xcdefab
+0x1710:abefcd0000000000      | 	.quad 0xcdefab
+0x1718:abefcd0000000000      | 	.quad 0xcdefab
+0x1720:abefcd0000000000      | 	.quad 0xcdefab
+0x1728:abefcd0000000000      | 	.quad 0xcdefab
+0x1730:abefcd0000000000      | 	.quad 0xcdefab
+0x1738:abefcd0000000000      | 	.quad 0xcdefab
+0x1740:abefcd0000000000      | 	.quad 0xcdefab
+0x1748:abefcd0000000000      | 	.quad 0xcdefab
+0x1750:abefcd0000000000      | 	.quad 0xcdefab
+0x1758:abefcd0000000000      | 	.quad 0xcdefab
+0x1760:abefcd0000000000      | 	.quad 0xcdefab
+0x1768:abefcd0000000000      | 	.quad 0xcdefab
+0x1770:abefcd0000000000      | 	.quad 0xcdefab
+0x1778:abefcd0000000000      | 	.quad 0xcdefab
+0x1780:abefcd0000000000      | 	.quad 0xcdefab
+0x1788:abefcd0000000000      | 	.quad 0xcdefab
+0x1790:abefcd0000000000      | 	.quad 0xcdefab
+0x1798:abefcd0000000000      | 	.quad 0xcdefab
+0x17a0:abefcd0000000000      | 	.quad 0xcdefab
+0x17a8:abefcd0000000000      | 	.quad 0xcdefab
+0x17b0:abefcd0000000000      | 	.quad 0xcdefab
+0x17b8:abefcd0000000000      | 	.quad 0xcdefab
+0x17c0:abefcd0000000000      | 	.quad 0xcdefab
+0x17c8:abefcd0000000000      | 	.quad 0xcdefab
+0x17d0:abefcd0000000000      | 	.quad 0xcdefab
+0x17d8:abefcd0000000000      | 	.quad 0xcdefab
+0x17e0:abefcd0000000000      | 	.quad 0xcdefab
+0x17e8:abefcd0000000000      | 	.quad 0xcdefab
+0x17f0:abefcd0000000000      | 	.quad 0xcdefab
+0x17f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1800:abefcd0000000000      | 	.quad 0xcdefab
+0x1808:abefcd0000000000      | 	.quad 0xcdefab
+0x1810:abefcd0000000000      | 	.quad 0xcdefab
+0x1818:abefcd0000000000      | 	.quad 0xcdefab
+0x1820:abefcd0000000000      | 	.quad 0xcdefab
+0x1828:abefcd0000000000      | 	.quad 0xcdefab
+0x1830:abefcd0000000000      | 	.quad 0xcdefab
+0x1838:abefcd0000000000      | 	.quad 0xcdefab
+0x1840:abefcd0000000000      | 	.quad 0xcdefab
+0x1848:abefcd0000000000      | 	.quad 0xcdefab
+0x1850:abefcd0000000000      | 	.quad 0xcdefab
+0x1858:abefcd0000000000      | 	.quad 0xcdefab
+0x1860:abefcd0000000000      | 	.quad 0xcdefab
+0x1868:abefcd0000000000      | 	.quad 0xcdefab
+0x1870:abefcd0000000000      | 	.quad 0xcdefab
+0x1878:abefcd0000000000      | 	.quad 0xcdefab
+0x1880:abefcd0000000000      | 	.quad 0xcdefab
+0x1888:abefcd0000000000      | 	.quad 0xcdefab
+0x1890:abefcd0000000000      | 	.quad 0xcdefab
+0x1898:abefcd0000000000      | 	.quad 0xcdefab
+0x18a0:abefcd0000000000      | 	.quad 0xcdefab
+0x18a8:abefcd0000000000      | 	.quad 0xcdefab
+0x18b0:abefcd0000000000      | 	.quad 0xcdefab
+0x18b8:abefcd0000000000      | 	.quad 0xcdefab
+0x18c0:abefcd0000000000      | 	.quad 0xcdefab
+0x18c8:abefcd0000000000      | 	.quad 0xcdefab
+0x18d0:abefcd0000000000      | 	.quad 0xcdefab
+0x18d8:abefcd0000000000      | 	.quad 0xcdefab
+0x18e0:abefcd0000000000      | 	.quad 0xcdefab
+0x18e8:abefcd0000000000      | 	.quad 0xcdefab
+0x18f0:abefcd0000000000      | 	.quad 0xcdefab
+0x18f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1900:abefcd0000000000      | 	.quad 0xcdefab
+0x1908:abefcd0000000000      | 	.quad 0xcdefab
+0x1910:abefcd0000000000      | 	.quad 0xcdefab
+0x1918:abefcd0000000000      | 	.quad 0xcdefab
+0x1920:abefcd0000000000      | 	.quad 0xcdefab
+0x1928:abefcd0000000000      | 	.quad 0xcdefab
+0x1930:abefcd0000000000      | 	.quad 0xcdefab
+0x1938:abefcd0000000000      | 	.quad 0xcdefab
+0x1940:abefcd0000000000      | 	.quad 0xcdefab
+0x1948:abefcd0000000000      | 	.quad 0xcdefab
+0x1950:abefcd0000000000      | 	.quad 0xcdefab
+0x1958:abefcd0000000000      | 	.quad 0xcdefab
+0x1960:abefcd0000000000      | 	.quad 0xcdefab
+0x1968:abefcd0000000000      | 	.quad 0xcdefab
+0x1970:abefcd0000000000      | 	.quad 0xcdefab
+0x1978:abefcd0000000000      | 	.quad 0xcdefab
+0x1980:abefcd0000000000      | 	.quad 0xcdefab
+0x1988:abefcd0000000000      | 	.quad 0xcdefab
+0x1990:abefcd0000000000      | 	.quad 0xcdefab
+0x1998:abefcd0000000000      | 	.quad 0xcdefab
+0x19a0:abefcd0000000000      | 	.quad 0xcdefab
+0x19a8:abefcd0000000000      | 	.quad 0xcdefab
+0x19b0:abefcd0000000000      | 	.quad 0xcdefab
+0x19b8:abefcd0000000000      | 	.quad 0xcdefab
+0x19c0:abefcd0000000000      | 	.quad 0xcdefab
+0x19c8:abefcd0000000000      | 	.quad 0xcdefab
+0x19d0:abefcd0000000000      | 	.quad 0xcdefab
+0x19d8:abefcd0000000000      | 	.quad 0xcdefab
+0x19e0:abefcd0000000000      | 	.quad 0xcdefab
+0x19e8:abefcd0000000000      | 	.quad 0xcdefab
+0x19f0:abefcd0000000000      | 	.quad 0xcdefab
+0x19f8:abefcd0000000000      | 	.quad 0xcdefab
+0x1a00:abefcd0000000000      | 	.quad 0xcdefab
+0x1a08:abefcd0000000000      | 	.quad 0xcdefab
+0x1a10:abefcd0000000000      | 	.quad 0xcdefab
+0x1a18:abefcd0000000000      | 	.quad 0xcdefab
+0x1a20:abefcd0000000000      | 	.quad 0xcdefab
+0x1a28:abefcd0000000000      | 	.quad 0xcdefab
+0x1a30:abefcd0000000000      | 	.quad 0xcdefab
+0x1a38:abefcd0000000000      | 	.quad 0xcdefab
+0x1a40:abefcd0000000000      | 	.quad 0xcdefab
+0x1a48:abefcd0000000000      | 	.quad 0xcdefab
+0x1a50:abefcd0000000000      | 	.quad 0xcdefab
+0x1a58:abefcd0000000000      | 	.quad 0xcdefab
+0x1a60:abefcd0000000000      | 	.quad 0xcdefab
+0x1a68:abefcd0000000000      | 	.quad 0xcdefab
+0x1a70:abefcd0000000000      | 	.quad 0xcdefab
+0x1a78:abefcd0000000000      | 	.quad 0xcdefab
+0x1a80:abefcd0000000000      | 	.quad 0xcdefab
+0x1a88:abefcd0000000000      | 	.quad 0xcdefab
+0x1a90:abefcd0000000000      | 	.quad 0xcdefab
+0x1a98:abefcd0000000000      | 	.quad 0xcdefab
+0x1aa0:abefcd0000000000      | 	.quad 0xcdefab
+0x1aa8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ab0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ab8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ac0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ac8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ad0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ad8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ae0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ae8:abefcd0000000000      | 	.quad 0xcdefab
+0x1af0:abefcd0000000000      | 	.quad 0xcdefab
+0x1af8:abefcd0000000000      | 	.quad 0xcdefab
+0x1b00:abefcd0000000000      | 	.quad 0xcdefab
+0x1b08:abefcd0000000000      | 	.quad 0xcdefab
+0x1b10:abefcd0000000000      | 	.quad 0xcdefab
+0x1b18:abefcd0000000000      | 	.quad 0xcdefab
+0x1b20:abefcd0000000000      | 	.quad 0xcdefab
+0x1b28:abefcd0000000000      | 	.quad 0xcdefab
+0x1b30:abefcd0000000000      | 	.quad 0xcdefab
+0x1b38:abefcd0000000000      | 	.quad 0xcdefab
+0x1b40:abefcd0000000000      | 	.quad 0xcdefab
+0x1b48:abefcd0000000000      | 	.quad 0xcdefab
+0x1b50:abefcd0000000000      | 	.quad 0xcdefab
+0x1b58:abefcd0000000000      | 	.quad 0xcdefab
+0x1b60:abefcd0000000000      | 	.quad 0xcdefab
+0x1b68:abefcd0000000000      | 	.quad 0xcdefab
+0x1b70:abefcd0000000000      | 	.quad 0xcdefab
+0x1b78:abefcd0000000000      | 	.quad 0xcdefab
+0x1b80:abefcd0000000000      | 	.quad 0xcdefab
+0x1b88:abefcd0000000000      | 	.quad 0xcdefab
+0x1b90:abefcd0000000000      | 	.quad 0xcdefab
+0x1b98:abefcd0000000000      | 	.quad 0xcdefab
+0x1ba0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ba8:abefcd0000000000      | 	.quad 0xcdefab
+0x1bb0:abefcd0000000000      | 	.quad 0xcdefab
+0x1bb8:abefcd0000000000      | 	.quad 0xcdefab
+0x1bc0:abefcd0000000000      | 	.quad 0xcdefab
+0x1bc8:abefcd0000000000      | 	.quad 0xcdefab
+0x1bd0:abefcd0000000000      | 	.quad 0xcdefab
+0x1bd8:abefcd0000000000      | 	.quad 0xcdefab
+0x1be0:abefcd0000000000      | 	.quad 0xcdefab
+0x1be8:abefcd0000000000      | 	.quad 0xcdefab
+0x1bf0:abefcd0000000000      | 	.quad 0xcdefab
+0x1bf8:abefcd0000000000      | 	.quad 0xcdefab
+0x1c00:abefcd0000000000      | 	.quad 0xcdefab
+0x1c08:abefcd0000000000      | 	.quad 0xcdefab
+0x1c10:abefcd0000000000      | 	.quad 0xcdefab
+0x1c18:abefcd0000000000      | 	.quad 0xcdefab
+0x1c20:abefcd0000000000      | 	.quad 0xcdefab
+0x1c28:abefcd0000000000      | 	.quad 0xcdefab
+0x1c30:abefcd0000000000      | 	.quad 0xcdefab
+0x1c38:abefcd0000000000      | 	.quad 0xcdefab
+0x1c40:abefcd0000000000      | 	.quad 0xcdefab
+0x1c48:abefcd0000000000      | 	.quad 0xcdefab
+0x1c50:abefcd0000000000      | 	.quad 0xcdefab
+0x1c58:abefcd0000000000      | 	.quad 0xcdefab
+0x1c60:abefcd0000000000      | 	.quad 0xcdefab
+0x1c68:abefcd0000000000      | 	.quad 0xcdefab
+0x1c70:abefcd0000000000      | 	.quad 0xcdefab
+0x1c78:abefcd0000000000      | 	.quad 0xcdefab
+0x1c80:abefcd0000000000      | 	.quad 0xcdefab
+0x1c88:abefcd0000000000      | 	.quad 0xcdefab
+0x1c90:abefcd0000000000      | 	.quad 0xcdefab
+0x1c98:abefcd0000000000      | 	.quad 0xcdefab
+0x1ca0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ca8:abefcd0000000000      | 	.quad 0xcdefab
+0x1cb0:abefcd0000000000      | 	.quad 0xcdefab
+0x1cb8:abefcd0000000000      | 	.quad 0xcdefab
+0x1cc0:abefcd0000000000      | 	.quad 0xcdefab
+0x1cc8:abefcd0000000000      | 	.quad 0xcdefab
+0x1cd0:abefcd0000000000      | 	.quad 0xcdefab
+0x1cd8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ce0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ce8:abefcd0000000000      | 	.quad 0xcdefab
+0x1cf0:abefcd0000000000      | 	.quad 0xcdefab
+0x1cf8:abefcd0000000000      | 	.quad 0xcdefab
+0x1d00:abefcd0000000000      | 	.quad 0xcdefab
+0x1d08:abefcd0000000000      | 	.quad 0xcdefab
+0x1d10:abefcd0000000000      | 	.quad 0xcdefab
+0x1d18:abefcd0000000000      | 	.quad 0xcdefab
+0x1d20:abefcd0000000000      | 	.quad 0xcdefab
+0x1d28:abefcd0000000000      | 	.quad 0xcdefab
+0x1d30:abefcd0000000000      | 	.quad 0xcdefab
+0x1d38:abefcd0000000000      | 	.quad 0xcdefab
+0x1d40:abefcd0000000000      | 	.quad 0xcdefab
+0x1d48:abefcd0000000000      | 	.quad 0xcdefab
+0x1d50:abefcd0000000000      | 	.quad 0xcdefab
+0x1d58:abefcd0000000000      | 	.quad 0xcdefab
+0x1d60:abefcd0000000000      | 	.quad 0xcdefab
+0x1d68:abefcd0000000000      | 	.quad 0xcdefab
+0x1d70:abefcd0000000000      | 	.quad 0xcdefab
+0x1d78:abefcd0000000000      | 	.quad 0xcdefab
+0x1d80:abefcd0000000000      | 	.quad 0xcdefab
+0x1d88:abefcd0000000000      | 	.quad 0xcdefab
+0x1d90:abefcd0000000000      | 	.quad 0xcdefab
+0x1d98:abefcd0000000000      | 	.quad 0xcdefab
+0x1da0:abefcd0000000000      | 	.quad 0xcdefab
+0x1da8:abefcd0000000000      | 	.quad 0xcdefab
+0x1db0:abefcd0000000000      | 	.quad 0xcdefab
+0x1db8:abefcd0000000000      | 	.quad 0xcdefab
+0x1dc0:abefcd0000000000      | 	.quad 0xcdefab
+0x1dc8:abefcd0000000000      | 	.quad 0xcdefab
+0x1dd0:abefcd0000000000      | 	.quad 0xcdefab
+0x1dd8:abefcd0000000000      | 	.quad 0xcdefab
+0x1de0:abefcd0000000000      | 	.quad 0xcdefab
+0x1de8:abefcd0000000000      | 	.quad 0xcdefab
+0x1df0:abefcd0000000000      | 	.quad 0xcdefab
+0x1df8:abefcd0000000000      | 	.quad 0xcdefab
+0x1e00:abefcd0000000000      | 	.quad 0xcdefab
+0x1e08:abefcd0000000000      | 	.quad 0xcdefab
+0x1e10:abefcd0000000000      | 	.quad 0xcdefab
+0x1e18:abefcd0000000000      | 	.quad 0xcdefab
+0x1e20:abefcd0000000000      | 	.quad 0xcdefab
+0x1e28:abefcd0000000000      | 	.quad 0xcdefab
+0x1e30:abefcd0000000000      | 	.quad 0xcdefab
+0x1e38:abefcd0000000000      | 	.quad 0xcdefab
+0x1e40:abefcd0000000000      | 	.quad 0xcdefab
+0x1e48:abefcd0000000000      | 	.quad 0xcdefab
+0x1e50:abefcd0000000000      | 	.quad 0xcdefab
+0x1e58:abefcd0000000000      | 	.quad 0xcdefab
+0x1e60:abefcd0000000000      | 	.quad 0xcdefab
+0x1e68:abefcd0000000000      | 	.quad 0xcdefab
+0x1e70:abefcd0000000000      | 	.quad 0xcdefab
+0x1e78:abefcd0000000000      | 	.quad 0xcdefab
+0x1e80:abefcd0000000000      | 	.quad 0xcdefab
+0x1e88:abefcd0000000000      | 	.quad 0xcdefab
+0x1e90:abefcd0000000000      | 	.quad 0xcdefab
+0x1e98:abefcd0000000000      | 	.quad 0xcdefab
+0x1ea0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ea8:abefcd0000000000      | 	.quad 0xcdefab
+0x1eb0:abefcd0000000000      | 	.quad 0xcdefab
+0x1eb8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ec0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ec8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ed0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ed8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ee0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ee8:abefcd0000000000      | 	.quad 0xcdefab
+0x1ef0:abefcd0000000000      | 	.quad 0xcdefab
+0x1ef8:abefcd0000000000      | 	.quad 0xcdefab
+0x1f00:abefcd0000000000      | 	.quad 0xcdefab
+0x1f08:abefcd0000000000      | 	.quad 0xcdefab
+0x1f10:abefcd0000000000      | 	.quad 0xcdefab
+0x1f18:abefcd0000000000      | 	.quad 0xcdefab
+0x1f20:abefcd0000000000      | 	.quad 0xcdefab
+0x1f28:abefcd0000000000      | 	.quad 0xcdefab
+0x1f30:abefcd0000000000      | 	.quad 0xcdefab
+0x1f38:abefcd0000000000      | 	.quad 0xcdefab
+0x1f40:abefcd0000000000      | 	.quad 0xcdefab
+0x1f48:abefcd0000000000      | 	.quad 0xcdefab
+0x1f50:abefcd0000000000      | 	.quad 0xcdefab
+0x1f58:abefcd0000000000      | 	.quad 0xcdefab
+0x1f60:abefcd0000000000      | 	.quad 0xcdefab
+0x1f68:abefcd0000000000      | 	.quad 0xcdefab
+0x1f70:abefcd0000000000      | 	.quad 0xcdefab
+0x1f78:abefcd0000000000      | 	.quad 0xcdefab
+0x1f80:                      | Postdest:
+0x1f80:bcfade0000000000      | 	.quad 0xdefabc
+                             | 
+0x1f88:                      | .align 8
+                             | # Run time stack
+0x1f88:0000000000000000      | 	.quad 0
+0x1f90:0000000000000000      | 	.quad 0
+0x1f98:0000000000000000      | 	.quad 0
+0x1fa0:0000000000000000      | 	.quad 0
+0x1fa8:0000000000000000      | 	.quad 0
+0x1fb0:0000000000000000      | 	.quad 0
+0x1fb8:0000000000000000      | 	.quad 0
+0x1fc0:0000000000000000      | 	.quad 0
+0x1fc8:0000000000000000      | 	.quad 0
+0x1fd0:0000000000000000      | 	.quad 0
+0x1fd8:0000000000000000      | 	.quad 0
+0x1fe0:0000000000000000      | 	.quad 0
+0x1fe8:0000000000000000      | 	.quad 0
+0x1ff0:0000000000000000      | 	.quad 0
+0x1ff8:0000000000000000      | 	.quad 0
+0x2000:0000000000000000      | 	.quad 0
+                             | 
+0x2008:                      | Stack:

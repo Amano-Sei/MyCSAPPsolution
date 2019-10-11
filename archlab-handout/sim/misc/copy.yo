@@ -1,0 +1,43 @@
+                            | #   Amano Sei
+                            | #   2019-10-10 下 emmm说起来b站大会员一年比一年贵了（但是我还是买了
+                            | #                 毕竟犯懒的时候还是会在线看番的...虽然基本上都不是第一时间看的
+                            | #   long copy_block(long *src, long *dest, long len);
+                            | 
+0x000: 30f40002000000000000 | irmovq  Stack, %rsp
+0x00a: 30f70001000000000000 | irmovq  src, %rdi
+0x014: 30f61801000000000000 | irmovq  dest, %rsi
+0x01e: 30f20300000000000000 | irmovq  $3, %rdx
+0x028: 803200000000000000   | call    copy_block
+0x031: 00                   | halt
+                            | 
+0x032:                      | copy_block:
+0x032: 6300                 |     xorq    %rax, %rax
+0x034: 30f80800000000000000 |     irmovq  $8, %r8
+0x03e: 30f90100000000000000 |     irmovq  $1, %r9
+0x048: 706b00000000000000   |     jmp     totest
+0x051:                      | tonext:
+0x051: 50170000000000000000 |     mrmovq  (%rdi), %rcx
+0x05b: 40160000000000000000 |     rmmovq  %rcx, (%rsi)
+0x065: 6310                 |     xorq    %rcx, %rax
+0x067: 6087                 |     addq    %r8, %rdi
+0x069: 6086                 |     addq    %r8, %rsi
+0x06b:                      | totest:
+0x06b: 6192                 |     subq    %r9, %rdx
+0x06d: 755100000000000000   |     jge     tonext
+0x076:                      | toret:
+0x076: 90                   |     ret
+                            | 
+0x100:                      | .pos 0x100
+0x100:                      | .align 8
+0x100:                      | src:
+0x100: 0a00000000000000     |     .quad 0x00a
+0x108: b000000000000000     |     .quad 0x0b0
+0x110: 000c000000000000     |     .quad 0xc00
+0x118:                      | dest:
+0x118: 1101000000000000     |     .quad 0x111
+0x120: 2202000000000000     |     .quad 0x222
+0x128: 3303000000000000     |     .quad 0x333
+                            | 
+0x200:                      | .pos 0x200
+0x200:                      | Stack:
+                            | 

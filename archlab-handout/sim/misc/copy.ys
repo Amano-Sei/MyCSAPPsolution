@@ -1,0 +1,43 @@
+#   Amano Sei
+#   2019-10-10 下 emmm说起来b站大会员一年比一年贵了（但是我还是买了
+#                 毕竟犯懒的时候还是会在线看番的...虽然基本上都不是第一时间看的
+#   long copy_block(long *src, long *dest, long len);
+
+irmovq  Stack, %rsp
+irmovq  src, %rdi
+irmovq  dest, %rsi
+irmovq  $3, %rdx
+call    copy_block
+halt
+
+copy_block:
+    xorq    %rax, %rax
+    irmovq  $8, %r8
+    irmovq  $1, %r9
+    jmp     totest
+tonext:
+    mrmovq  (%rdi), %rcx
+    rmmovq  %rcx, (%rsi)
+    xorq    %rcx, %rax
+    addq    %r8, %rdi
+    addq    %r8, %rsi
+totest:
+    subq    %r9, %rdx
+    jge     tonext
+toret:
+    ret
+
+.pos 0x100
+.align 8
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+.pos 0x200
+Stack:
+
