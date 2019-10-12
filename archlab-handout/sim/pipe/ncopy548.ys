@@ -1,0 +1,145 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Amano Sei
+#
+# 看了dalao的做法，真的超妙的说...
+# 所以这里要尝试在理解了dalao的做法后，自己重新写一遍
+#
+# 这是557版本的优先jg版本，正如我们所判断的那样
+# 低余数半区周期数明显变多
+# 而且因为多了个jmp使得有些高余数半区不减反增
+# 所以进一步优化应该需要扩大周期
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorq %rax,%rax		# count = 0;
+    iaddq $-7, %rdx
+    jge Loop
+    iaddq $4, %rdx
+    jg LL
+    je L3
+    iaddq $2, %rdx
+    jl Done
+    je L1
+    iaddq $-1, %rdx
+    jmp L2
+LL:
+    iaddq $-2, %rdx
+    jl L4
+    je L5
+    jmp L6
+Loop:
+    mrmovq (%rdi), %r8
+    mrmovq 8(%rdi), %r9
+    mrmovq 16(%rdi), %r10
+    mrmovq 24(%rdi), %r11
+    mrmovq 32(%rdi), %r12
+    mrmovq 40(%rdi), %r13
+    mrmovq 48(%rdi), %r14
+    rmmovq %r8, (%rsi)
+    rmmovq %r9, 8(%rsi)
+    rmmovq %r10, 16(%rsi)
+    rmmovq %r11, 24(%rsi)
+    rmmovq %r12, 32(%rsi)
+    rmmovq %r13, 40(%rsi)
+    rmmovq %r14, 48(%rsi)
+    andq %r8, %r8
+    jle Nposl1
+    iaddq $1, %rax
+Nposl1:
+    andq %r9, %r9
+    jle Nposl2
+    iaddq $1, %rax
+Nposl2:
+    andq %r10, %r10
+    jle Nposl3
+    iaddq $1, %rax
+Nposl3:
+    andq %r11, %r11
+    jle Nposl4
+    iaddq $1, %rax
+Nposl4:
+    andq %r12, %r12
+    jle Nposl5
+    iaddq $1, %rax
+Nposl5:
+    andq %r13, %r13
+    jle Nposl6
+    iaddq $1, %rax
+Nposl6:
+    andq %r14, %r14
+    jle Nposl7
+    iaddq $1, %rax
+Nposl7:
+    iaddq $0x38, %rsi
+    iaddq $0x38, %rdi
+    iaddq $-7, %rdx
+    jge Loop
+    iaddq $4, %rdx
+    jg LL
+    je L3
+    iaddq $2, %rdx
+    jl Done
+    je L1
+    iaddq $-1, %rdx
+    jmp L2
+L6:
+    mrmovq 40(%rdi), %r13
+    rmmovq %r13, 40(%rsi)
+    andq %r13, %r13
+L5:
+    mrmovq 32(%rdi), %r12
+    jle Nposf6
+    iaddq $1, %rax
+Nposf6:
+    andq %r12, %r12
+    rmmovq %r12, 32(%rsi)
+L4:
+    mrmovq 24(%rdi), %r11
+    jle Nposf5
+    iaddq $1, %rax
+Nposf5:
+    andq %r11, %r11
+    rmmovq %r11, 24(%rsi)
+L3:
+    mrmovq 16(%rdi), %r10
+    jle Nposf4
+    iaddq $1, %rax
+Nposf4:
+    andq %r10, %r10
+    rmmovq %r10, 16(%rsi)
+L2:
+    mrmovq 8(%rdi), %r9
+    jle Nposf3
+    iaddq $1, %rax
+Nposf3:
+    andq %r9, %r9
+    rmmovq %r9, 8(%rsi)
+L1:
+    mrmovq (%rdi), %r8
+    jle Nposf2
+    iaddq $1, %rax
+Nposf2:
+    andq %r8, %r8
+    rmmovq %r8, (%rsi)
+    jle Done
+    iaddq $1, %rax
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

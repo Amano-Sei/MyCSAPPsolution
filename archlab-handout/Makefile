@@ -8,9 +8,12 @@ VERSION = 1
 
 # Where are the different parts of the lab should be copied to when they
 # are handed in.
-HANDINDIR-PARTA = /afs/cs/academic/class/15349-s02/archlab/handin-parta
-HANDINDIR-PARTB = /afs/cs/academic/class/15349-s02/archlab/handin-partb
-HANDINDIR-PARTC = /afs/cs/academic/class/15349-s02/archlab/handin-partc
+#HANDINDIR-PARTA = /afs/cs/academic/class/15349-s02/archlab/handin-parta
+#HANDINDIR-PARTB = /afs/cs/academic/class/15349-s02/archlab/handin-partb
+#HANDINDIR-PARTC = /afs/cs/academic/class/15349-s02/archlab/handin-partc
+HANDINDIR-PARTA = ./handin-parta
+HANDINDIR-PARTB = ./handin-partb
+HANDINDIR-PARTC = ./handin-partc
 
 sim:
 	(cd sim; make)

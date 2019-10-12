@@ -12,18 +12,6 @@
 # 但是事实上，这样只省了一个时钟，而预测失误要2个时钟...
 # 10位版本这个问题被放大了我才意识到（
 #
-# 然后我才意识到，跳转的话就一定可以让RR通过落入进入L了
-#
-# 感叹，这个很多地方直觉感觉不到是正常的，因为很多地方是反直觉的
-# 比如更多的跳转语句在预测错误的几率更低的情况下，平均会有更好的表现
-# 现在分数已经达到了58.4了
-#
-# 可以看到因为平均值的算法不是计算总周期数，而是计算平均周期的平均数
-# 所以如果在前面加上jl而不是jge，会使得0~8的结果每个都减少了2个周期
-# 虽然对于大的数据量来说会增加周期数，但是平均起来就没有低的影响大
-# 现在分数是58.8
-# 可能是这个做法的瓶颈了（
-#
 ##################################################################
 # Do not modify this portion
 # Function prologue.
@@ -35,7 +23,25 @@ ncopy:
 	# Loop header
 	xorq %rax,%rax		# count = 0;
     iaddq $-9, %rdx
-    jl LastTest
+    jge Loop
+    iaddq $5, %rdx
+    jl LL
+    jg RR
+    je L4
+RR:
+    iaddq $-2, %rdx
+    jl L5
+    je L6
+    iaddq $-2, %rdx
+    jl L7
+    je L8
+LL:
+    iaddq $3, %rdx
+    jl Done
+    je L1
+    iaddq $-2, %rdx
+    jl L2
+    je L3
 Loop:
     mrmovq (%rdi), %r8
     mrmovq 8(%rdi), %r9
@@ -95,28 +101,10 @@ Nposl9:
     iaddq $0x48, %rdi
     iaddq $-9, %rdx
     jge Loop
-LastTest:
     iaddq $5, %rdx
     jl LL
     jg RR
     je L4
-LL:
-    iaddq $3, %rdx
-    jg LL2
-    je L1
-    ret
-LL2:
-    iaddq $-2, %rdx
-    jl L2
-    je L3
-RR:
-    iaddq $-2, %rdx
-    jg RR2
-    je L6
-    jmp L5
-RR2:
-    iaddq $-2, %rdx
-    jl L7
 L8:
     mrmovq 56(%rdi), %r8
     rmmovq %r8, 56(%rsi)

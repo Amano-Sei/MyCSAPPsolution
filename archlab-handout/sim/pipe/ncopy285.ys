@@ -1,16 +1,3 @@
-#######################################################################
-# Test for copying block of size 4;
-#######################################################################
-	.pos 0
-main:	irmovq Stack, %rsp  	# Set up stack pointer
-
-	# Set up arguments for copy function and then invoke it
-	irmovq $4, %rdx		# src and dst have 4 elements
-	irmovq dest, %rsi	# dst array
-	irmovq src, %rdi	# src array
-	call ncopy		 
-	halt			# should halt with num nonzeros in %rax
-StartFun:
 #/* $begin ncopy-ys */
 ##################################################################
 # ncopy.ys - Copy a src block of len words to dst.
@@ -47,54 +34,18 @@ ncopy:
 	# Loop header
 	xorq %rax,%rax		# count = 0;
     rrmovq %rdx, %rcx
-    iaddq $-14, %rcx
+    iaddq $-8, %rcx
     jge BigLoop
-    iaddq $10, %rcx
-    jge MainLoop
-LastTest:
-	iaddq $-1, %rdx		# len--
-	jge LastLoop			# if so, goto Loop:
+    iaddq $6, %rcx
+    jge LittleLoop
+	iaddq $1, %rcx		# len--
+	jl Done			# if so, goto Loop:
+    mrmovq (%rdi), %r10	# read val from src...
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	andq %r10, %r10		# val <= 0?
+	jle Done		# if so, goto Npos:
+	iaddq $1, %rax		# count++
     ret
-LastLoop:
-    mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	iaddq $8, %rdi		# src++
-	iaddq $8, %rsi		# dst++
-	andq %r10, %r10		# val <= 0?
-	jle LastTest		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-    jmp LastTest
-MainLoop:
-    mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposm1		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposm1:
-    mrmovq 8(%rdi), %r10	# read val from src...
-	rmmovq %r10, 8(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposm2		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposm2:
-    mrmovq 16(%rdi), %r10	# read val from src...
-	rmmovq %r10, 16(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposm3		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposm3:
-    mrmovq 24(%rdi), %r10	# read val from src...
-	rmmovq %r10, 24(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposm4		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposm4:
-	iaddq $32, %rdi		# src++
-	iaddq $32, %rsi		# dst++
-    rrmovq %rcx, %rdx
-    iaddq $-4, %rcx
-    jge MainLoop
-    jmp LastTest
 BigLoop:
     mrmovq (%rdi), %r10	# read val from src...
 	rmmovq %r10, (%rsi)	# ...and store it to dst
@@ -144,50 +95,49 @@ Nposb7:
 	jle Nposb8		# if so, goto Npos:
 	iaddq $1, %rax		# count++
 Nposb8:
-    mrmovq 64(%rdi), %r10	# read val from src...
-	rmmovq %r10, 64(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposb9		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposb9:
-    mrmovq 72(%rdi), %r10	# read val from src...
-	rmmovq %r10, 72(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposb10		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposb10:
-    mrmovq 80(%rdi), %r10	# read val from src...
-	rmmovq %r10, 80(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposb11		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposb11:
-    mrmovq 88(%rdi), %r10	# read val from src...
-	rmmovq %r10, 88(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposb12		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposb12:
-    mrmovq 96(%rdi), %r10	# read val from src...
-	rmmovq %r10, 96(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposb13		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposb13:
-    mrmovq 104(%rdi), %r10	# read val from src...
-	rmmovq %r10, 104(%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Nposb14		# if so, goto Npos:
-	iaddq $1, %rax		# count++
-Nposb14:
-	iaddq $112, %rdi		# src++
-	iaddq $112, %rsi		# dst++
+	iaddq $64, %rdi		# src++
+	iaddq $64, %rsi		# dst++
     rrmovq %rcx, %rdx
-    iaddq $-14, %rcx
+    iaddq $-8, %rcx
     jge BigLoop
-    iaddq $10, %rcx
-    jge MainLoop
-    jmp LastTest
+    iaddq $6, %rcx
+    jge LittleLoop
+	iaddq $1, %rcx		# len--
+	jl Done			# if so, goto Loop:
+    mrmovq (%rdi), %r10	# read val from src...
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	andq %r10, %r10		# val <= 0?
+	jle Done		# if so, goto Npos:
+	iaddq $1, %rax		# count++
+    ret
+LittleLoop:
+    mrmovq (%rdi), %r10	# read val from src...
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	andq %r10, %r10		# val <= 0?
+	jle Nposl1		# if so, goto Npos:
+	iaddq $1, %rax		# count++
+Nposl1:
+    mrmovq 8(%rdi), %r10	# read val from src...
+	rmmovq %r10, 8(%rsi)	# ...and store it to dst
+	andq %r10, %r10		# val <= 0?
+	jle Nposl2		# if so, goto Npos:
+	iaddq $1, %rax		# count++
+Nposl2:
+	iaddq $16, %rdi		# src++
+	iaddq $16, %rsi		# dst++
+    rrmovq %rcx, %rdx
+    iaddq $-2, %rcx
+    jge LittleLoop
+LastTest:
+	iaddq $-1, %rdx		# len--
+	jl Done			# if so, goto Loop:
+LastLoop:
+    mrmovq (%rdi), %r10	# read val from src...
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	andq %r10, %r10		# val <= 0?
+	jle Done		# if so, goto Npos:
+	iaddq $1, %rax		# count++
+    ret
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
@@ -197,47 +147,3 @@ Done:
 # Keep the following label at the end of your function
 End:
 #/* $end ncopy-ys */
-EndFun:
-
-###############################
-# Source and destination blocks 
-###############################
-	.align 8
-src:
-	.quad -1
-	.quad -2
-	.quad 3
-	.quad 4
-	.quad 0xbcdefa # This shouldn't get moved
-
-	.align 16
-Predest:
-	.quad 0xbcdefa
-dest:
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-Postdest:
-	.quad 0xdefabc
-
-.align 8
-# Run time stack
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-
-Stack:
