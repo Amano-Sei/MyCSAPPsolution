@@ -1,0 +1,42 @@
+# Amano Sei
+# 2019-10-10 下 比起计算机专业的和其他专业会编程的话，我们和他们有什么区别这种问题...
+#               说实话，我完全感觉不到这些，我很清楚所谓的术业有专精
+#               我烦恼的是，我曾经相信垃圾都是因为不努力才变成垃圾的
+#               但是如果垃圾也努力的话，我和垃圾又有什么区别呢（
+# rsum.ys
+# long rsum_list(list_ptr ls);
+
+irmovq  Stack, %rsp
+irmovq  ele1, %rdi
+call    rsum_list
+halt
+
+rsum_list:
+    pushq   %rbx
+    xorq    %rax, %rax
+    andq    %rdi, %rdi
+    je      toret
+    mrmovq  (%rdi), %rbx
+    irmovq  $8, %r8
+    addq    %r8, %rdi
+    mrmovq  (%rdi), %rdi
+    call    rsum_list
+    addq    %rbx, %rax
+toret:
+    popq    %rbx
+    ret
+
+.pos 0x100
+.align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+.pos 0x200
+Stack:

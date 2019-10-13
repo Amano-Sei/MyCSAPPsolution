@@ -1,0 +1,40 @@
+# Amano Sei
+# 2019-10-10 中 有些时候看到日期，真的会想要是倒转多少多少年真的多好啊
+#               倒不是后悔什么的，只是再给我选一次绝对不会来这里
+# sum.ys
+# long sum_list(list_ptr ls);
+
+irmovq  Stack, %rsp
+irmovq  ele1, %rdi
+call    sum_list
+halt
+
+sum_list:
+    xorq    %rax, %rax
+    jmp     totest
+toloop:
+    mrmovq  (%rdi), %rdx
+    addq    %rdx, %rax
+    mrmovq  8(%rdi), %rdi
+# 说实话这里很犹豫，不过x86-64也是可以的，从设计上也不会产生冲突
+# 就这样吧（笑）
+totest:
+    andq    %rdi, %rdi
+    jne     toloop
+    ret
+
+
+.pos 0x100
+.align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+.pos 0x200
+Stack:

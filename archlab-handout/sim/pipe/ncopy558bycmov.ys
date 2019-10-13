@@ -1,16 +1,3 @@
-#######################################################################
-# Test for copying block of size 63;
-#######################################################################
-	.pos 0
-main:	irmovq Stack, %rsp  	# Set up stack pointer
-
-	# Set up arguments for copy function and then invoke it
-	irmovq $63, %rdx		# src and dst have 63 elements
-	irmovq dest, %rsi	# dst array
-	irmovq src, %rdi	# src array
-	call ncopy		 
-	halt			# should halt with num nonzeros in %rax
-StartFun:
 #/* $begin ncopy-ys */
 ##################################################################
 # ncopy.ys - Copy a src block of len words to dst.
@@ -54,7 +41,11 @@ StartFun:
 # 额外的ret的气泡唯一可能出现的地方是一个jle，这个是没有办法的事情
 # 再试一下dalao的树版本，还不行就写cmov
 #
-# dalao树失败，cmov失败，尝试hcl
+# 其实一开始就明白，dalao树不行的（现在写下cmov
+#
+# 不出所料，cmov版本跑出55.8的低分...如果允许cmov立即数的话或许分数会高一点点...
+# 但是，结果就是这样
+# 再试一下hcl不管怎么都先告一段落了...
 #
 ##################################################################
 # Do not modify this portion
@@ -66,6 +57,7 @@ ncopy:
 # You can modify this portion
 	# Loop header
 	xorq %rax,%rax		# count = 0;
+    irmovq $1, %r14
     iaddq $-9, %rdx
     jl LastTest
 Loop:
@@ -141,7 +133,7 @@ RR3:
     iaddq $-3, %rdx
     jl RL
     jg RR2
-    jmp L6
+    je L6
 RL:
     iaddq $1, %rdx
     jl L4
@@ -151,52 +143,60 @@ RR2:
     jl L7
 L8:
     mrmovq 56(%rdi), %r8
+    xorq %r9, %r9
     rmmovq %r8, 56(%rsi)
     andq %r8, %r8
-    jle L7
-    iaddq $1, %rax
+    cmovg %r14, %r9
+    addq %r9, %rax
 L7:
     mrmovq 48(%rdi), %r8
+    xorq %r9, %r9
     rmmovq %r8, 48(%rsi)
     andq %r8, %r8
-    jle L6
-    iaddq $1, %rax
+    cmovg %r14, %r9
+    addq %r9, %rax
 L6:
     mrmovq 40(%rdi), %r8
+    xorq %r9, %r9
     rmmovq %r8, 40(%rsi)
     andq %r8, %r8
-    jle L5
-    iaddq $1, %rax
+    cmovg %r14, %r9
+    addq %r9, %rax
 L5:
     mrmovq 32(%rdi), %r8
-    rmmovq %r8, 32(%rsi)
+    xorq %r9, %r9
     andq %r8, %r8
-    jle L4
-    iaddq $1, %rax
+    rmmovq %r8, 32(%rsi)
+    cmovg %r14, %r9
+    addq %r9, %rax
 L4:
     mrmovq 24(%rdi), %r8
-    rmmovq %r8, 24(%rsi)
+    xorq %r9, %r9
     andq %r8, %r8
-    jle L3
-    iaddq $1, %rax
+    rmmovq %r8, 24(%rsi)
+    cmovg %r14, %r9
+    addq %r9, %rax
 L3:
     mrmovq 16(%rdi), %r8
-    rmmovq %r8, 16(%rsi)
+    xorq %r9, %r9
     andq %r8, %r8
-    jle L2
-    iaddq $1, %rax
+    rmmovq %r8, 16(%rsi)
+    cmovg %r14, %r9
+    addq %r9, %rax
 L2:
     mrmovq 8(%rdi), %r8
-    rmmovq %r8, 8(%rsi)
+    xorq %r9, %r9
     andq %r8, %r8
-    jle L1
-    iaddq $1, %rax
+    rmmovq %r8, 8(%rsi)
+    cmovg %r14, %r9
+    addq %r9, %rax
 L1:
     mrmovq (%rdi), %r8
-    rmmovq %r8, (%rsi)
+    xorq %r9, %r9
     andq %r8, %r8
-    jle Done
-    iaddq $1, %rax
+    rmmovq %r8, (%rsi)
+    cmovg %r14, %r9
+    addq %r9, %rax
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
@@ -206,165 +206,3 @@ Done:
 # Keep the following label at the end of your function
 End:
 #/* $end ncopy-ys */
-EndFun:
-
-###############################
-# Source and destination blocks 
-###############################
-	.align 8
-src:
-	.quad -1
-	.quad -2
-	.quad -3
-	.quad 4
-	.quad -5
-	.quad -6
-	.quad 7
-	.quad -8
-	.quad 9
-	.quad 10
-	.quad -11
-	.quad 12
-	.quad -13
-	.quad 14
-	.quad 15
-	.quad 16
-	.quad -17
-	.quad -18
-	.quad 19
-	.quad -20
-	.quad 21
-	.quad -22
-	.quad 23
-	.quad -24
-	.quad 25
-	.quad -26
-	.quad 27
-	.quad 28
-	.quad -29
-	.quad -30
-	.quad 31
-	.quad 32
-	.quad 33
-	.quad -34
-	.quad -35
-	.quad -36
-	.quad 37
-	.quad 38
-	.quad -39
-	.quad -40
-	.quad -41
-	.quad 42
-	.quad -43
-	.quad -44
-	.quad 45
-	.quad -46
-	.quad 47
-	.quad 48
-	.quad 49
-	.quad -50
-	.quad 51
-	.quad 52
-	.quad -53
-	.quad 54
-	.quad 55
-	.quad -56
-	.quad 57
-	.quad -58
-	.quad 59
-	.quad 60
-	.quad -61
-	.quad -62
-	.quad -63
-	.quad 0xbcdefa # This shouldn't get moved
-
-	.align 16
-Predest:
-	.quad 0xbcdefa
-dest:
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-Postdest:
-	.quad 0xdefabc
-
-.align 8
-# Run time stack
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-
-Stack:

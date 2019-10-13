@@ -1,0 +1,199 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Amano Sei
+#
+# 调整的以4为界的10位版本
+# 开始比对自己和dalao的代码
+# 发现dalao的代码一个新的小机关，准备加入自己的最佳代码看看
+# 这个代码和581版本的区别只有调换了1和2的顺序
+# 理由很简单，1少4个周期绝对比2少4个周期更重要
+# 大概去掉xorq %rax, %rax就是满分吧，但是个人不能接受这个答案
+#
+# 其实之前就有疑问，dalao为什么在关键时刻不再进行跳转了
+# 然而现实是，空间不够了，分数突破了59.0，但是地方不够啊(((
+#
+# 在没有用10位的情况下突破到了59.8，在这个时候重看这个
+# 是想看一下可能性，然而即使空间占用到了1079B，害死只是59.8
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorq %rax,%rax		# count = 0;
+    iaddq $-10, %rdx
+    jl LastTest
+Loop:
+    mrmovq (%rdi), %r8
+    mrmovq 8(%rdi), %r9
+    rmmovq %r8, (%rsi)
+    rmmovq %r9, 8(%rsi)
+    andq %r8, %r8
+    jle Nposl1
+    iaddq $1, %rax
+Nposl1:
+    andq %r9, %r9
+    jle Nposl2
+    iaddq $1, %rax
+Nposl2:
+    mrmovq 16(%rdi), %r8
+    mrmovq 24(%rdi), %r9
+    rmmovq %r8, 16(%rsi)
+    rmmovq %r9, 24(%rsi)
+    andq %r8, %r8
+    jle Nposl3
+    iaddq $1, %rax
+Nposl3:
+    andq %r9, %r9
+    jle Nposl4
+    iaddq $1, %rax
+Nposl4:
+    mrmovq 32(%rdi), %r8
+    mrmovq 40(%rdi), %r9
+    rmmovq %r8, 32(%rsi)
+    rmmovq %r9, 40(%rsi)
+    andq %r8, %r8
+    jle Nposl5
+    iaddq $1, %rax
+Nposl5:
+    andq %r9, %r9
+    jle Nposl6
+    iaddq $1, %rax
+Nposl6:
+    mrmovq 48(%rdi), %r8
+    mrmovq 56(%rdi), %r9
+    rmmovq %r8, 48(%rsi)
+    rmmovq %r9, 56(%rsi)
+    andq %r8, %r8
+    jle Nposl7
+    iaddq $1, %rax
+Nposl7:
+    andq %r9, %r9
+    jle Nposl8
+    iaddq $1, %rax
+Nposl8:
+    mrmovq 64(%rdi), %r8
+    mrmovq 72(%rdi), %r9
+    rmmovq %r8, 64(%rsi)
+    rmmovq %r9, 72(%rsi)
+    andq %r8, %r8
+    jle Nposl9
+    iaddq $1, %rax
+Nposl9:
+    andq %r9, %r9
+    jle Nposl10
+    iaddq $1, %rax
+Nposl10:
+    iaddq $0x50, %rsi
+    iaddq $0x50, %rdi
+    iaddq $-10, %rdx
+    jge Loop
+LastTest:
+    iaddq $7, %rdx
+    jl LL
+    jg RR
+    mrmovq 16(%rdi), %r8
+    je Nposf4
+LL:
+    iaddq $2, %rdx
+    mrmovq (%rdi), %r8
+    je Nposf2
+    mrmovq 8(%rdi), %r8
+    jg Nposf3
+    ret
+RR:
+    iaddq $-3, %rdx
+    jl RR3
+    jg RR2
+    mrmovq 40(%rdi), %r8
+    je Nposf7
+RR3:
+    iaddq $1, %rdx
+    mrmovq 24(%rdi), %r8
+    jl Nposf5
+    mrmovq 32(%rdi), %r8
+    je Nposf6
+RR2:
+    iaddq $-2, %rdx
+    mrmovq 48(%rdi), %r8
+    jl Nposf8
+    mrmovq 56(%rdi), %r8
+    je Nposf9
+L9:
+    mrmovq 64(%rdi), %r8
+    rmmovq %r8, 64(%rsi)
+    andq %r8, %r8
+L8:
+    mrmovq 56(%rdi), %r8
+    jle Nposf9
+    iaddq $1, %rax
+Nposf9:
+    rmmovq %r8, 56(%rsi)
+    andq %r8, %r8
+L7:
+    mrmovq 48(%rdi), %r8
+    jle Nposf8
+    iaddq $1, %rax
+Nposf8:
+    rmmovq %r8, 48(%rsi)
+    andq %r8, %r8
+L6:
+    mrmovq 40(%rdi), %r8
+    jle Nposf7
+    iaddq $1, %rax
+Nposf7:
+    rmmovq %r8, 40(%rsi)
+    andq %r8, %r8
+L5:
+    mrmovq 32(%rdi), %r8
+    jle Nposf6
+    iaddq $1, %rax
+Nposf6:
+    andq %r8, %r8
+    rmmovq %r8, 32(%rsi)
+L4:
+    mrmovq 24(%rdi), %r8
+    jle Nposf5
+    iaddq $1, %rax
+Nposf5:
+    andq %r8, %r8
+    rmmovq %r8, 24(%rsi)
+L3:
+    mrmovq 16(%rdi), %r8
+    jle Nposf4
+    iaddq $1, %rax
+Nposf4:
+    andq %r8, %r8
+    rmmovq %r8, 16(%rsi)
+L2:
+    mrmovq 8(%rdi), %r8
+    jle Nposf3
+    iaddq $1, %rax
+Nposf3:
+    andq %r8, %r8
+    rmmovq %r8, 8(%rsi)
+L1:
+    mrmovq (%rdi), %r8
+    jle Nposf2
+    iaddq $1, %rax
+Nposf2:
+    andq %r8, %r8
+    rmmovq %r8, (%rsi)
+    jle Done
+    iaddq $1, %rax
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

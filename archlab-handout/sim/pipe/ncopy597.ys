@@ -1,16 +1,3 @@
-#######################################################################
-# Test for copying block of size 4;
-#######################################################################
-	.pos 0
-main:	irmovq Stack, %rsp  	# Set up stack pointer
-
-	# Set up arguments for copy function and then invoke it
-	irmovq $4, %rdx		# src and dst have 4 elements
-	irmovq dest, %rsi	# dst array
-	irmovq src, %rdi	# src array
-	call ncopy		 
-	halt			# should halt with num nonzeros in %rax
-StartFun:
 #/* $begin ncopy-ys */
 ##################################################################
 # ncopy.ys - Copy a src block of len words to dst.
@@ -37,24 +24,11 @@ StartFun:
 # 现在分数是58.8
 # 可能是这个做法的瓶颈了（
 #
-# 重新调整了分界和顺序，分数上升到了59.0...说不定还可以在高一点
+# 588版本加入我的突发想法的版本，分数达到了59.2
+# 接下来才是重头戏，我的突发想法使得8位展开获得了一个重大优化的可能
 #
-# 意识到最后一种情况没有必要直接跳转走，这样可以节省一个周期
-#
-# 因为就差一点点了，所以重新思考了cmov的可能性，再次否决
-# 因为cmov需要3个周期，jle的话平均需要2.5个周期
-# 但是会有最终部分出现一个bubble和还是要看最终部分的负数的个数...
-# 等下会尝试下cmov版本
-#
-# 一言以蔽之，新优化方法应该是拿高余数的一个周期增加换低余数的一个周期减少
-# 结果很显著，冲到了59.8，就差一点了！
-#
-# 现在的我，还能想到的只剩cmov和动刀hcl了
-# 但是现在除了剩8个以外的所有use/load hazard都被避免掉了...
-# 额外的ret的气泡唯一可能出现的地方是一个jle，这个是没有办法的事情
-# 再试一下dalao的树版本，还不行就写cmov
-#
-# dalao树失败，cmov失败，尝试hcl
+# 592版本加入最新优化的版本，分数达到了59.7
+# 还差一点，但是好像不知道怎么继续优化了QAQ
 #
 ##################################################################
 # Do not modify this portion
@@ -128,73 +102,87 @@ Nposl9:
     iaddq $-9, %rdx
     jge Loop
 LastTest:
-    iaddq $8, %rdx
+    iaddq $5, %rdx
+    jl LL
     jg RR
-    je L1
+    mrmovq 24(%rdi), %r8
+    jmp Nposf5
+LL:
+    iaddq $3, %rdx
+    jg LL2
+    mrmovq (%rdi), %r8
+    je Nposf2
     ret
+LL2:
+    iaddq $-2, %rdx
+    mrmovq 8(%rdi), %r8
+    jl Nposf3
+    mrmovq 16(%rdi), %r8
+    jmp Nposf4
 RR:
     iaddq $-2, %rdx
-    jg RR3
-    jl L2
-    je L3
-RR3:
-    iaddq $-3, %rdx
-    jl RL
     jg RR2
-    jmp L6
-RL:
-    iaddq $1, %rdx
-    jl L4
-    je L5
+    mrmovq 32(%rdi), %r8
+    jl Nposf6
+    mrmovq 40(%rdi), %r8
+    je Nposf7
 RR2:
     iaddq $-2, %rdx
-    jl L7
+    mrmovq 48(%rdi), %r8
+    jl Nposf8
 L8:
     mrmovq 56(%rdi), %r8
     rmmovq %r8, 56(%rsi)
     andq %r8, %r8
-    jle L7
-    iaddq $1, %rax
 L7:
     mrmovq 48(%rdi), %r8
+    jle Nposf8
+    iaddq $1, %rax
+Nposf8:
     rmmovq %r8, 48(%rsi)
     andq %r8, %r8
-    jle L6
-    iaddq $1, %rax
 L6:
     mrmovq 40(%rdi), %r8
+    jle Nposf7
+    iaddq $1, %rax
+Nposf7:
     rmmovq %r8, 40(%rsi)
     andq %r8, %r8
-    jle L5
-    iaddq $1, %rax
 L5:
     mrmovq 32(%rdi), %r8
-    rmmovq %r8, 32(%rsi)
-    andq %r8, %r8
-    jle L4
+    jle Nposf6
     iaddq $1, %rax
+Nposf6:
+    andq %r8, %r8
+    rmmovq %r8, 32(%rsi)
 L4:
     mrmovq 24(%rdi), %r8
-    rmmovq %r8, 24(%rsi)
-    andq %r8, %r8
-    jle L3
+    jle Nposf5
     iaddq $1, %rax
+Nposf5:
+    andq %r8, %r8
+    rmmovq %r8, 24(%rsi)
 L3:
     mrmovq 16(%rdi), %r8
-    rmmovq %r8, 16(%rsi)
-    andq %r8, %r8
-    jle L2
+    jle Nposf4
     iaddq $1, %rax
+Nposf4:
+    andq %r8, %r8
+    rmmovq %r8, 16(%rsi)
 L2:
     mrmovq 8(%rdi), %r8
-    rmmovq %r8, 8(%rsi)
-    andq %r8, %r8
-    jle L1
+    jle Nposf3
     iaddq $1, %rax
+Nposf3:
+    andq %r8, %r8
+    rmmovq %r8, 8(%rsi)
 L1:
     mrmovq (%rdi), %r8
-    rmmovq %r8, (%rsi)
+    jle Nposf2
+    iaddq $1, %rax
+Nposf2:
     andq %r8, %r8
+    rmmovq %r8, (%rsi)
     jle Done
     iaddq $1, %rax
 ##################################################################
@@ -206,47 +194,3 @@ Done:
 # Keep the following label at the end of your function
 End:
 #/* $end ncopy-ys */
-EndFun:
-
-###############################
-# Source and destination blocks 
-###############################
-	.align 8
-src:
-	.quad 1
-	.quad -2
-	.quad -3
-	.quad 4
-	.quad 0xbcdefa # This shouldn't get moved
-
-	.align 16
-Predest:
-	.quad 0xbcdefa
-dest:
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-	.quad 0xcdefab
-Postdest:
-	.quad 0xdefabc
-
-.align 8
-# Run time stack
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-	.quad 0
-
-Stack:
