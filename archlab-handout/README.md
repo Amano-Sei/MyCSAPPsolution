@@ -23,7 +23,7 @@ emmm个人来说拒绝删掉xorq %rax, %rax的语句的做法，实际运行时r
 差不多就这么多了，做完的时候说实话成就感有限，更多的是解脱感...终于做完了第四章相关，可以继续推csapp进度了QAQ  
   
 ## benchmark.pl结果
-	ncopy  
+    ncopy  
 0	20  
 1	22	22.00  
 2	31	15.50  
@@ -92,6 +92,6 @@ emmm个人来说拒绝删掉xorq %rax, %rax的语句的做法，实际运行时r
 Average CPE	7.48  
 Score	60.0/60.0  
   
-补了下benchmark.pl的打印，需要注意这个是实现了iaddq和避免访存阶段才需要valA值的加载/使用冒险的pipe版本的运行结果  
+补了下benchmark.pl的输出结果，需要注意这个是实现了iaddq和避免访存阶段才需要valA值的加载/使用冒险的pipe版本的运行结果  
 只实现了iaddq的pipe的话可以看同目录下的ncopy598.ys版本，虽然不是满分（  
   
