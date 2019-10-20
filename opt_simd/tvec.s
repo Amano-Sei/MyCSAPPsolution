@@ -51,5 +51,24 @@ innerv:
 	.cfi_endproc
 .LFE23:
 	.size	innerv, .-innerv
+	.globl	tmov
+	.type	tmov, @function
+tmov:
+.LFB24:
+	.cfi_startproc
+	movq	$0, 16(%rdi)
+	movq	$0, 24(%rdi)
+	movq	$0, 32(%rdi)
+	movq	$0, 40(%rdi)
+	movq	$0, 48(%rdi)
+	movq	$0, 56(%rdi)
+	movl	$1, (%rdi)
+	movl	$1, 4(%rdi)
+	movl	$1, 8(%rdi)
+	movl	$1, 12(%rdi)
+	ret
+	.cfi_endproc
+.LFE24:
+	.size	tmov, .-tmov
 	.ident	"GCC: (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0"
 	.section	.note.GNU-stack,"",@progbits

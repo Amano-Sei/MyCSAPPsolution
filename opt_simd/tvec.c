@@ -26,3 +26,11 @@ data_t innerv(vec_t av, vec_t bv){
     return result;
 }
 
+//5.17让我想起来了之前看过dalao说的优化memset...当初是看不懂说的是什么的（
+//现在想起来了的话，那么实现一个32字节一挪的memset不是很棒么...
+
+void tmov(vec_t *p){
+    vec_t a = {1,1,1,1};
+    *p = a;
+}
+
