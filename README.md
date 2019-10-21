@@ -9,5 +9,5 @@
 2019-10-13 午 architecture lab 完成  
 2019-10-20 夜 c5 完成  
 2019-10-21 下 web aside opt:simd 完成  
-下一个目标：performance lab?  
+下一个目标：performance lab  
 
