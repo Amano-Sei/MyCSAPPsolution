@@ -6,62 +6,81 @@ memset:
 .LFB23:
 	.cfi_startproc
 	movq	%rdi, %rax
-	cmpq	$1023, %rdx
-	ja	.L9
+	cmpq	$31, %rdx
+	jbe	.L13
+	movl	%esi, %r8d
+	movzbl	%sil, %r9d
+	movq	%r9, %rcx
+	salq	$8, %rcx
+	orq	%r9, %rcx
+	movq	%rcx, %r9
+	salq	$16, %r9
+	orq	%r9, %rcx
+	movq	%rcx, %r9
+	salq	$32, %r9
+	orq	%rcx, %r9
+	vpinsrq	$0, %r9, %xmm0, %xmm0
+	vpinsrq	$1, %r9, %xmm0, %xmm0
+	vinserti128	$0x1, %xmm0, %ymm0, %ymm0
 	movq	%rdi, %rcx
 	jmp	.L3
 .L4:
-	movb	%sil, (%rcx)
-	leaq	1(%rcx), %rcx
-.L2:
-	testb	$31, %cl
-	jne	.L4
-	movzbl	%sil, %r9d
-	movq	%r9, %r8
-	salq	$56, %r8
-	movq	%r9, %rdi
-	salq	$48, %rdi
-	orq	%rdi, %r8
-	movq	%r9, %rdi
-	salq	$40, %rdi
-	movq	%r9, %r10
-	salq	$32, %r10
-	orq	%r10, %rdi
-	orq	%rdi, %r8
-	movq	%r9, %rdi
-	salq	$24, %rdi
-	movq	%r9, %r10
-	salq	$16, %r10
-	orq	%r10, %rdi
-	movq	%r9, %r10
-	salq	$8, %r10
-	orq	%r10, %r9
-	orq	%rdi, %r9
-	orq	%r9, %r8
-	vpxor	%xmm0, %xmm0, %xmm0
-	vpinsrq	$0, %r8, %xmm0, %xmm0
-	vpinsrq	$1, %r8, %xmm0, %xmm0
-	vinserti128	$0x0, %xmm0, %ymm0, %ymm0
-	vinserti128	$0x1, %xmm0, %ymm0, %ymm0
-	jmp	.L5
-.L9:
-	movq	%rdi, %rcx
-	jmp	.L2
-.L6:
-	vmovdqa	%ymm0, (%rcx)
-	addq	$32, %rcx
-	subq	$32, %rdx
-.L5:
-	cmpq	$31, %rdx
-	ja	.L6
-	jmp	.L3
-.L8:
-	movb	%sil, (%rcx)
+	movb	%r8b, (%rcx)
 	subq	$1, %rdx
 	leaq	1(%rcx), %rcx
 .L3:
-	testq	%rdx, %rdx
+	testb	$31, %cl
+	jne	.L4
+	movq	%rdx, %r8
+	shrq	$8, %r8
+	jmp	.L5
+.L6:
+	vmovdqa	%ymm0, (%rcx)
+	vmovdqa	%ymm0, 32(%rcx)
+	vmovdqa	%ymm0, 64(%rcx)
+	vmovdqa	%ymm0, 96(%rcx)
+	vmovdqa	%ymm0, 128(%rcx)
+	vmovdqa	%ymm0, 160(%rcx)
+	vmovdqa	%ymm0, 192(%rcx)
+	vmovdqa	%ymm0, 224(%rcx)
+	addq	$256, %rcx
+	subq	$1, %r8
+.L5:
+	testq	%r8, %r8
+	jne	.L6
+	movzbl	%dl, %r8d
+	shrq	$5, %r8
+	jmp	.L7
+.L8:
+	vmovdqa	%ymm0, (%rcx)
+	addq	$32, %rcx
+	subq	$1, %r8
+.L7:
+	testq	%r8, %r8
 	jne	.L8
+	movq	%rdx, %r8
+	andl	$31, %r8d
+	shrq	$3, %r8
+	jmp	.L9
+.L10:
+	movq	%r9, (%rcx)
+	addq	$8, %rcx
+	subq	$1, %r8
+.L9:
+	testq	%r8, %r8
+	jne	.L10
+	andl	$7, %edx
+	jmp	.L11
+.L13:
+	movq	%rdi, %rcx
+	jmp	.L11
+.L12:
+	movb	%sil, (%rcx)
+	subq	$1, %rdx
+	leaq	1(%rcx), %rcx
+.L11:
+	testq	%rdx, %rdx
+	jne	.L12
 	rep ret
 	.cfi_endproc
 .LFE23:
@@ -92,18 +111,18 @@ main:
 	subq	$8, %rsp
 	.cfi_def_cfa_offset 48
 	movl	$1920, %r12d
-	jmp	.L11
-.L13:
+	jmp	.L15
+.L17:
 	addl	$1, %ebx
-.L12:
+.L16:
 	cmpl	%ebx, %r12d
-	jle	.L19
+	jle	.L23
 	leal	0(%rbp,%rbx), %eax
 	cltq
 	leaq	fort(%rip), %rdx
 	movzbl	(%rdx,%rax), %eax
 	cmpl	%eax, %r13d
-	je	.L13
+	je	.L17
 	movslq	%ebx, %rax
 	movsbl	(%rdx,%rax), %ecx
 	movl	%ebx, %edx
@@ -111,12 +130,12 @@ main:
 	movl	$1, %edi
 	movl	$0, %eax
 	call	__printf_chk@PLT
-	jmp	.L13
-.L19:
+	jmp	.L17
+.L23:
 	addl	$1, %ebp
-.L16:
+.L20:
 	cmpl	$31, %ebp
-	jg	.L20
+	jg	.L24
 	leal	-1920(%r12,%rbp), %esi
 	movl	%esi, %eax
 	sarl	$31, %eax
@@ -131,15 +150,15 @@ main:
 	movslq	%r12d, %rdx
 	call	memset
 	movl	$0, %ebx
-	jmp	.L12
-.L20:
-	addl	$1, %r12d
-.L11:
-	cmpl	$2175, %r12d
-	jg	.L21
-	movl	$0, %ebp
 	jmp	.L16
-.L21:
+.L24:
+	addl	$1, %r12d
+.L15:
+	cmpl	$2175, %r12d
+	jg	.L25
+	movl	$0, %ebp
+	jmp	.L20
+.L25:
 	leaq	.LC1(%rip), %rdi
 	call	puts@PLT
 	movl	$0, %eax

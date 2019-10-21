@@ -7,49 +7,69 @@
 
 #include <stdio.h>
 
+typedef unsigned long int op_t;
+#define OPSIZ (sizeof(op_t))
 #define VBYTES 32
-//typedef unsigned char vec_t __attribute__ ((vector_size(VBYTES)));
-typedef unsigned long long vec_t __attribute__ ((vector_size(VBYTES)));
+#define VSIZE VBYTES/sizeof(op_t)
+typedef op_t vec_t __attribute__ ((vector_size(VBYTES)));
 
-void *memset(void *s, int c, size_t n){
-    unsigned char *schar = s;
-    if(n >= VBYTES*VBYTES){
-        //尝试了两种写法，如果前向不跳的话对于少量的memset都避免不了预测惩罚
-        while((unsigned long long)schar%VBYTES != 0)
-            *schar++ = (unsigned char)c;
+void * __attribute__ ((__optimize__("-fno-tree-loop-distribute-patterns"))) memset(void *dstpp, int c, size_t len){
+    unsigned char *dstp = dstpp;
+    if(len >= VBYTES){
+        size_t xlen;
         vec_t cdata;
-        unsigned long long ulc = (unsigned char)c;
-        ulc = (((ulc << 56)|(ulc << 48))|((ulc << 40)|(ulc << 32)))|(((ulc << 24)|(ulc << 16))|((ulc << 8)|ulc));
+        op_t ulc = (unsigned char)c;
+        ulc |= ulc << 8;
+        ulc |= ulc << 16;
+        ulc |= ulc << 32;
+        //期初这里不这样写是因为看到数据相关就难受...
+        //for(int i = 0; i < VSIZE; i++)
+        //    cdata[i] = ulc;
+        //本来这里犹豫要改成这样，但是本来就是很特化的代码，所以还是默认是8字节long了
         cdata[0] = ulc;
         cdata[1] = ulc;
         cdata[2] = ulc;
         cdata[3] = ulc;
-        //cdata[0] = cdata[1] = cdata[2] = cdata[3] = 
-        //cdata[4] = cdata[5] = cdata[6] = cdata[7] = 
-        //cdata[8] = cdata[9] = cdata[10] = cdata[11] = 
-        //cdata[12] = cdata[13] = cdata[14] = cdata[15] = 
-        //cdata[16] = cdata[17] = cdata[18] = cdata[19] = 
-        //cdata[20] = cdata[21] = cdata[22] = cdata[23] = 
-        //cdata[24] = cdata[25] = cdata[26] = cdata[27] = 
-        //cdata[28] = cdata[29] = cdata[30] = cdata[31] = 
-        //    (unsigned char)c;
-        //对着100多条的初始化语句懵逼...
-        //然后改成上面这样了（
-        
-        //手调了下产出的汇编的赋值部分(三操作数四操作数让我着实花了好多时间去理解...
-        //↑你都手调了，不调成少量的情况下没有惩罚（
-        //emmm主要是不知道cpu到底会怎么预测，所以就不动这部分了（
-
-        while(n >= VBYTES){
-            *(vec_t *)schar = cdata;
-            schar += VBYTES;
-            n -= VBYTES;
+        //上面这里会在汇编里微调，我不知道c怎么写128位integer
+        //修改的汇编已经通过了tmemset的测试了
+        while((op_t)dstp % VBYTES != 0){
+            *dstp++ = (unsigned char)c;
+            len--;
         }
+
+        xlen = len/(VBYTES*8);
+        while(xlen){
+            ((vec_t *)dstp)[0] = cdata;
+            ((vec_t *)dstp)[1] = cdata;
+            ((vec_t *)dstp)[2] = cdata;
+            ((vec_t *)dstp)[3] = cdata;
+            ((vec_t *)dstp)[4] = cdata;
+            ((vec_t *)dstp)[5] = cdata;
+            ((vec_t *)dstp)[6] = cdata;
+            ((vec_t *)dstp)[7] = cdata;
+            dstp += VBYTES*8;
+            xlen--;
+        }
+        len %= VBYTES*8;
+        xlen = len/VBYTES;
+        while(xlen){
+            ((vec_t *)dstp)[0] = cdata;
+            dstp += VBYTES;
+            xlen--;
+        }
+        len %= VBYTES;
+        xlen = len/OPSIZ;
+        while(xlen){
+            ((op_t *)dstp)[0] = ulc;
+            dstp += OPSIZ;
+            xlen--;
+        }
+        len %= OPSIZ;
     }
-    while(n > 0){
-        *schar++ = (unsigned char)c;
-        n--;
+    while(len){
+        *dstp++ = (unsigned char)c;
+        len--;
     }
-    return s;
+    return dstpp;
 }
 
