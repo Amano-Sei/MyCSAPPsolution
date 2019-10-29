@@ -81,6 +81,8 @@ void transpose(int *dst, int *src, int dim){
             dst[j*dim+i] = src[i*dim+j];
             j++;
         }
+        i++;
+        //之前这里忘记++了QAQ
     }
 }
 

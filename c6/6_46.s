@@ -373,8 +373,8 @@ my_col_convert:
 .L32:
 	testl	%r8d, %r8d
 	jne	.L72
-	movl	-12(%rsp), %r8d
-	addl	%eax, %r8d
+	movl	-12(%rsp), %r9d
+	leal	(%r9,%rax), %r8d
 	movslq	%r8d, %r8
 	movl	8(%r10,%r8,4), %r9d
 	testl	%r9d, %r9d
@@ -637,9 +637,9 @@ my_col_convert:
 	movslq	%r12d, %r12
 	leaq	(%r10,%r12,4), %r14
 	movl	(%r14), %ecx
-	leal	4(%r8), %edx
-	movl	%edx, -4(%rsp)
-	movl	%edx, %r13d
+	leal	4(%r8), %edi
+	movl	%edi, -4(%rsp)
+	movl	%edi, %r13d
 	imull	%r15d, %r13d
 	addl	%r8d, %r13d
 	movslq	%r13d, %r13
@@ -658,12 +658,7 @@ my_col_convert:
 .L86:
 	movl	-28(%rsp), %r9d
 	movl	%r15d, %r11d
-.L47:
-	leal	-1(%r11), %eax
-	cmpl	%r9d, %eax
-	jle	.L87
-	leal	1(%r9), %edx
-	jmp	.L48
+	jmp	.L47
 .L82:
 	movl	$1, %ecx
 .L49:
@@ -676,7 +671,7 @@ my_col_convert:
 	addl	$1, %edx
 .L48:
 	cmpl	%r11d, %edx
-	jge	.L47
+	jge	.L87
 	movl	%r9d, %eax
 	imull	%r11d, %eax
 	addl	%edx, %eax
@@ -694,6 +689,15 @@ my_col_convert:
 	movl	$1, %ecx
 	jmp	.L49
 .L87:
+	movl	%edi, %r9d
+.L47:
+	leal	-1(%r11), %eax
+	cmpl	%r9d, %eax
+	jle	.L88
+	leal	1(%r9), %edi
+	movl	%edi, %edx
+	jmp	.L48
+.L88:
 	popq	%rbx
 	.cfi_def_cfa_offset 48
 	popq	%rbp

@@ -159,12 +159,15 @@ void my_col_convert(int *G, int dim){
             j++;
         }
     }
-    while(i < dim-1)
+    while(i < dim-1){
         for(j = i+1; j < dim; j++){
             int t1 = G[i*dim+j];
             t1 = t1 || G[j*dim+i];
             G[j*dim+i] = t1;
             G[i*dim+j] = t1;
         }
+        i++;
+        //45忘记了（就在想46是不是也忘了QAQ，结果真的忘了
+    }
 }
 

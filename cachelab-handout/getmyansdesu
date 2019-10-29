@@ -1,0 +1,163 @@
+L 30b080,4 miss 
+L 30b084,4 hit 
+L 30b088,4 hit 
+L 30b08c,4 hit 
+L 30b090,4 hit 
+L 30b094,4 hit 
+L 30b098,4 hit 
+L 30b09c,4 hit 
+S 34b080,4 miss eviction 
+S 34b180,4 miss 
+S 34b280,4 miss 
+S 34b380,4 miss 
+S 34b090,4 hit 
+S 34b094,4 hit 
+S 34b098,4 hit 
+S 34b09c,4 hit 
+L 30b180,4 miss eviction 
+L 30b184,4 hit 
+L 30b188,4 hit 
+L 30b18c,4 hit 
+L 30b190,4 hit 
+L 30b194,4 hit 
+L 30b198,4 hit 
+L 30b19c,4 hit 
+S 34b084,4 hit 
+S 34b184,4 miss eviction 
+S 34b284,4 hit 
+S 34b384,4 hit 
+S 34b190,4 hit 
+S 34b194,4 hit 
+S 34b198,4 hit 
+S 34b19c,4 hit 
+
+L 30b280,4 miss eviction 
+L 30b284,4 hit 
+L 30b288,4 hit 
+L 30b28c,4 hit 
+L 30b290,4 hit 
+L 30b294,4 hit 
+L 30b298,4 hit 
+L 30b29c,4 hit 
+S 34b088,4 hit 
+S 34b188,4 hit 
+S 34b288,4 miss eviction 
+S 34b388,4 hit 
+S 34b290,4 hit 
+S 34b294,4 hit 
+S 34b298,4 hit 
+S 34b29c,4 hit 
+L 30b380,4 miss eviction 
+L 30b384,4 hit 
+L 30b388,4 hit 
+L 30b38c,4 hit 
+L 30b390,4 hit 
+L 30b394,4 hit 
+L 30b398,4 hit 
+L 30b39c,4 hit 
+S 34b08c,4 hit 
+S 34b18c,4 hit 
+S 34b28c,4 hit 
+S 34b38c,4 miss eviction 
+S 34b390,4 hit 
+S 34b394,4 hit 
+S 34b398,4 hit 
+S 34b39c,4 hit 
+
+L 30b480,4 miss eviction 
+L 30b580,4 miss eviction 
+L 30b680,4 miss eviction 
+L 30b780,4 miss eviction 
+L 34b090,4 miss eviction 
+L 34b094,4 hit 
+L 34b098,4 hit 
+L 34b09c,4 hit 
+S 34b090,4 hit 
+S 34b094,4 hit 
+S 34b098,4 hit 
+S 34b09c,4 hit 
+S 34b480,4 miss eviction 
+S 34b580,4 miss eviction 
+S 34b680,4 miss eviction 
+S 34b780,4 miss eviction 
+L 30b484,4 miss eviction 
+L 30b584,4 miss eviction 
+L 30b684,4 miss eviction 
+L 30b784,4 miss eviction 
+L 34b190,4 miss eviction 
+L 34b194,4 hit 
+L 34b198,4 hit 
+L 34b19c,4 hit 
+S 34b190,4 hit 
+S 34b194,4 hit 
+S 34b198,4 hit 
+S 34b19c,4 hit 
+S 34b484,4 miss eviction 
+S 34b584,4 miss eviction 
+S 34b684,4 miss eviction 
+S 34b784,4 miss eviction 
+L 30b488,4 miss eviction 
+L 30b588,4 miss eviction 
+L 30b688,4 miss eviction 
+L 30b788,4 miss eviction 
+L 34b290,4 miss eviction 
+L 34b294,4 hit 
+L 34b298,4 hit 
+L 34b29c,4 hit 
+S 34b290,4 hit 
+S 34b294,4 hit 
+S 34b298,4 hit 
+S 34b29c,4 hit 
+S 34b488,4 miss eviction 
+S 34b588,4 miss eviction 
+S 34b688,4 miss eviction 
+S 34b788,4 miss eviction 
+L 30b48c,4 miss eviction 
+L 30b58c,4 miss eviction 
+L 30b68c,4 miss eviction 
+L 30b78c,4 miss eviction 
+L 34b390,4 miss eviction 
+L 34b394,4 hit 
+L 34b398,4 hit 
+L 34b39c,4 hit 
+S 34b390,4 hit 
+S 34b394,4 hit 
+S 34b398,4 hit 
+S 34b39c,4 hit 
+S 34b48c,4 miss eviction 
+S 34b58c,4 miss eviction 
+S 34b68c,4 miss eviction 
+S 34b78c,4 miss eviction 
+L 30b490,4 miss eviction 
+L 30b494,4 hit 
+L 30b498,4 hit 
+L 30b49c,4 hit 
+S 34b490,4 miss eviction 
+S 34b590,4 hit 
+S 34b690,4 hit 
+S 34b790,4 hit 
+L 30b590,4 miss eviction 
+L 30b594,4 hit 
+L 30b598,4 hit 
+L 30b59c,4 hit 
+S 34b494,4 hit 
+S 34b594,4 miss eviction 
+S 34b694,4 hit 
+S 34b794,4 hit 
+L 30b690,4 miss eviction 
+L 30b694,4 hit 
+L 30b698,4 hit 
+L 30b69c,4 hit 
+S 34b498,4 hit 
+S 34b598,4 hit 
+S 34b698,4 miss eviction 
+S 34b798,4 hit 
+L 30b790,4 miss eviction 
+L 30b794,4 hit 
+L 30b798,4 hit 
+L 30b79c,4 hit 
+S 34b49c,4 hit 
+S 34b59c,4 hit 
+S 34b69c,4 hit 
+S 34b79c,4 miss eviction 
+hits:105 misses:55 evictions:51
