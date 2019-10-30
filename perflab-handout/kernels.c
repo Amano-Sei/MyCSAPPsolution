@@ -47,7 +47,12 @@ void naive_rotate(int dim, pixel *src, pixel *dst)
 char rotate_descr[] = "rotate: Current working version";
 void rotate(int dim, pixel *src, pixel *dst) 
 {
-    naive_rotate(dim, src, dst);
+    int blocksize = 16;
+    for (int i = 0; i < dim; i+=blocksize)
+        for (int j = 0; j < dim; j+=blocksize)
+            for(int ii = i; ii < i+blocksize && ii < dim; ii++)
+                for(int jj = j; jj < j+blocksize && jj < dim; jj++)
+                    dst[RIDX(dim-1-jj, ii, dim)] = src[RIDX(ii, jj, dim)];
 }
 
 /*********************************************************************
@@ -156,6 +161,18 @@ void naive_smooth(int dim, pixel *src, pixel *dst)
 	    dst[RIDX(i, j, dim)] = avg(dim, i, j, src);
 }
 
+void addpixel(pixel_sum *ans, pixel *src){
+    ans->red += src->red;
+    ans->green += src->green;
+    ans->blue += src->blue;
+}
+
+void setpixel(pixel *dst, short red, short green, short blue){
+    dst->red = red;
+    dst->green = green;
+    dst->blue = blue;
+}
+
 /*
  * smooth - Your current working version of smooth. 
  * IMPORTANT: This is the version you will be graded on
@@ -163,7 +180,80 @@ void naive_smooth(int dim, pixel *src, pixel *dst)
 char smooth_descr[] = "smooth: Current working version";
 void smooth(int dim, pixel *src, pixel *dst) 
 {
-    naive_smooth(dim, src, dst);
+    if(dim){
+        int prered = 0;
+        int pregreen = 0;
+        int preblue = 0;
+        int curred = (int)src[0].red+src[dim].red;
+        int curgreen = (int)src[0].green+src[dim].green;
+        int curblue = (int)src[0].blue+src[dim].blue;
+        int nxtred = (int)src[1].red+src[dim+1].red;
+        int nxtgreen = (int)src[1].green+src[dim+1].green;
+        int nxtblue = (int)src[1].blue+src[dim+1].blue;
+        setpixel(dst, (prered+curred+nxtred)/4, (pregreen+curgreen+nxtgreen)/4, (preblue+curblue+nxtblue)/4);
+        for(int j = 1; j < dim; j++){
+            prered = curred; pregreen = curgreen; preblue = curblue;
+            curred = nxtred; curgreen = nxtgreen; curblue = nxtblue;
+            if(j<dim-1){
+                nxtred = (int)src[j+1].red+src[dim+j+1].red;
+                nxtgreen = (int)src[j+1].green+src[dim+j+1].green;
+                nxtblue = (int)src[j+1].blue+src[dim+j+1].blue;
+                setpixel(&dst[j], (prered+curred+nxtred)/6, (pregreen+curgreen+nxtgreen)/6, (preblue+curblue+nxtblue)/6);
+            }else{
+                setpixel(&dst[j], (prered+curred)/4, (pregreen+curgreen)/4, (preblue+curblue)/4);
+            }
+        }
+        
+        for (int i = 1; i < dim; i++){
+            if(i+1 < dim){
+                prered = 0;
+                pregreen = 0;
+                preblue = 0;
+                curred = (int)src[RIDX(i-1, 0, dim)].red+src[RIDX(i, 0, dim)].red+src[RIDX(i+1, 0, dim)].red;
+                curgreen = (int)src[RIDX(i-1, 0, dim)].green+src[RIDX(i, 0, dim)].green+src[RIDX(i+1, 0, dim)].green;
+                curblue = (int)src[RIDX(i-1, 0, dim)].blue+src[RIDX(i, 0, dim)].blue+src[RIDX(i+1, 0, dim)].blue;
+                nxtred = (int)src[RIDX(i-1, 1, dim)].red+src[RIDX(i, 1, dim)].red+src[RIDX(i+1, 1, dim)].red;
+                nxtgreen = (int)src[RIDX(i-1, 1, dim)].green+src[RIDX(i, 1, dim)].green+src[RIDX(i+1, 1, dim)].green;
+                nxtblue = (int)src[RIDX(i-1, 1, dim)].blue+src[RIDX(i, 1, dim)].blue+src[RIDX(i+1, 1, dim)].blue;
+                setpixel(&dst[RIDX(i, 0, dim)], (prered+curred+nxtred)/6, (pregreen+curgreen+nxtgreen)/6, (preblue+curblue+nxtblue)/6);
+                for(int j = 1; j < dim; j++){
+                    prered = curred; pregreen = curgreen; preblue = curblue;
+                    curred = nxtred; curgreen = nxtgreen; curblue = nxtblue;
+                    if(j+1<dim){
+                        nxtred = (int)src[RIDX(i-1, j+1, dim)].red+src[RIDX(i, j+1, dim)].red+src[RIDX(i+1, j+1, dim)].red;
+                        nxtgreen = (int)src[RIDX(i-1, j+1, dim)].green+src[RIDX(i, j+1, dim)].green+src[RIDX(i+1, j+1, dim)].green;
+                        nxtblue = (int)src[RIDX(i-1, j+1, dim)].blue+src[RIDX(i, j+1, dim)].blue+src[RIDX(i+1, j+1, dim)].blue;
+                        setpixel(&dst[RIDX(i, j, dim)], (prered+curred+nxtred)/9, (pregreen+curgreen+nxtgreen)/9, (preblue+curblue+nxtblue)/9);
+                    }else{
+                        setpixel(&dst[RIDX(i, j, dim)], (prered+curred)/6, (pregreen+curgreen)/6, (preblue+curblue)/6);
+                    }
+                }
+            }else{
+                prered = 0;
+                pregreen = 0;
+                preblue = 0;
+                curred = (int)src[RIDX(i-1, 0, dim)].red+src[RIDX(i, 0, dim)].red;
+                curgreen = (int)src[RIDX(i-1, 0, dim)].green+src[RIDX(i, 0, dim)].green;
+                curblue = (int)src[RIDX(i-1, 0, dim)].blue+src[RIDX(i, 0, dim)].blue;
+                nxtred = (int)src[RIDX(i-1, 1, dim)].red+src[RIDX(i, 1, dim)].red;
+                nxtgreen = (int)src[RIDX(i-1, 1, dim)].green+src[RIDX(i, 1, dim)].green;
+                nxtblue = (int)src[RIDX(i-1, 1, dim)].blue+src[RIDX(i, 1, dim)].blue;
+                setpixel(&dst[RIDX(i, 0, dim)], (prered+curred+nxtred)/4, (pregreen+curgreen+nxtgreen)/4, (preblue+curblue+nxtblue)/4);
+                for(int j = 1; j < dim; j++){
+                    prered = curred; pregreen = curgreen; preblue = curblue;
+                    curred = nxtred; curgreen = nxtgreen; curblue = nxtblue;
+                    if(j<dim-1){
+                        nxtred = (int)src[RIDX(i-1, j+1, dim)].red+src[RIDX(i, j+1, dim)].red;
+                        nxtgreen = (int)src[RIDX(i-1, j+1, dim)].green+src[RIDX(i, j+1, dim)].green;
+                        nxtblue = (int)src[RIDX(i-1, j+1, dim)].blue+src[RIDX(i, j+1, dim)].blue;
+                        setpixel(&dst[RIDX(i, j, dim)], (prered+curred+nxtred)/6, (pregreen+curgreen+nxtgreen)/6, (preblue+curblue+nxtblue)/6);
+                    }else{
+                        setpixel(&dst[RIDX(i, j, dim)], (prered+curred)/4, (pregreen+curgreen)/4, (preblue+curblue)/4);
+                    }
+                }
+            }
+        }
+    }
 }
 
 
