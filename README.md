@@ -10,7 +10,7 @@
 2019-10-20 夜 c5 完成  
 2019-10-21 下 web aside opt:simd 完成  
 2019-10-27 下 c6 完成  
-2019-10-29 夜 cache lab 完成
+2019-10-29 夜 cache lab 完成  
 2019-10-30 上 performance lab 完成  
 下一个目标：c7  
   
