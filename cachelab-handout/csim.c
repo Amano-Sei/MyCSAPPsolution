@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     char *filename = NULL;
     int opt;
     opterr = 0;
-    while((opt = getopt(argc, argv, "b:s:t:v:E:")) != -1){
+    while((opt = getopt(argc, argv, "b:s:t:E:v")) != -1){
         switch(opt){
             case 'b':
                 curb = atoi(optarg);
