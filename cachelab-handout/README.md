@@ -6,14 +6,18 @@
 终于结束了...partB真的写自闭了（一开始我没好好看writeup，准备写一个能同时拿到三种情况满分的方法...结果在我的64x64满分版本上怎么优化，32x32都跨不过300这条线...还就多了3个QAQ。
 
 64x64一开始没想到这样挪，是从dalao那里学来的，重新看writeup之后其实提示挺明显的，
+
 > "however, do whatever you want with the contents of array B."
+
 （一开始只看了前半句我还曲解成了不能随便修改B...)，dalao已经讲过的就不重复了，说下我这么长时间来关于64x64中第二部分优化的结论
 
 取A中左下角到B右上角部分那里，仅就A来说有两种取法，横着取和竖着取4个，同时B的右上角那里必然与这个方向相反，至于从B的右上角存到B的左下角可以随意，只需要调整存到B右上角时候的顺序即可。但是因为这里4行一循环，所以要尽量减少竖着取的情况，所以目前我认为的比较可行的方案只有两个，简称横竖横，
 竖横横，分别对应A左下，B右上，B左下。但是分析一下我们会发现竖横横比起另一个有一个大优势就是他会给A的右下留下前三行的缓存（曾经我考虑过在前面做点小动作地把第四行第四个给提前取出来，但是当时的我在考虑普适性...所以被理念否决了，其实如果可以再多一个变量的话应该就可以做到跨过300线了），最少就64x64的表现来说，竖横横的话是比横竖横要好的，我的写法的话在32x32下两者有一样的300整，在加上3个额外miss，跨不过去300呢（
 
 发觉网上别人的答案都是判断了长度之后，重读了writeup的我发现里面有这么一句（ 
+
 > "Your code only needs to be correct for these three cases and you can optimize it specifically for these three cases. In particular, it is perfectly OK for your function to explicitly check for the input sizes and implement separate code optimized for each case."
+
 （（（不好好读题是自找的呢
 
 随后迅速地随便选了一对数字进行分块完成了61x67，啊说道分块，网络旁注看了之后感觉自己绝望了，我知道这个啊，但是为什么block能带来这些优化我不知道啊QAQ
