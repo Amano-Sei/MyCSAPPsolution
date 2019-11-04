@@ -1,0 +1,22 @@
+## interpose
+
+这里要说一下...因为我宏没有学好，然后我又不明白在COMPLETETIME下为什么mymalloc.c中的malloc不会被替换...越看越不明白越看越不明白，突然我意识到库里面是有一个malloc.h的...（（（而且继续看书发现书上专门强调了mymalloc.c中的malloc.h是标准malloc.h（（（
+
+之后会找时间把gcc中cpp的macros章节看一遍（
+
+最后是关于最后的运行时打桩的段错误问题，我一开始遇到时也是手足无措，看了dalao用gdb调试，然而我的gdb的bt什么都没有...搜gdb的提示也没有找到一个很好的方法
+
+(最开始的时候我还怀疑过是不是intr中的问题，但是我不小心export LD\_PRELOAD="./mymalloc.so"后，连man手册都打不开了...所以这个时候我才相信一定是mymalloc.so中的问题。
+
+因为我并不能照着dalao说的那样用gdb，所以只能根据dalao所说的脑补了，如果printf会调用malloc，然后形成死循环的话，自然最终会导致溢出，但是这个malloc是在哪里调用的就不知道了，因为无论我是给malloc设置断点还是printf设置断点在gdb中都没有任何意义
+
+所以我猜想可能是在ld.so中存在对malloc的调用或是其他什么并不是intr的程序中的调用（我的系统中的ld.so中存在对malloc的调用已经通过objdump确认过了，但是段错误的原因是不是他就不知道了
+
+解决方案参考dalao的做法设置一个cnt，限制调用的深度，借助这个变量我们会发现限制几层，就出现几个打印malloc（
+
+除了cnt外，还有dalao说可以用fprintf，然而通过查看printf源码，printf事实上调用了stream为stdout的fprintf，我们发现调用stream为stderr的fprintf的话是没有问题的，但是如果同printf一样调用stream为stdout，会产生一样段错误提示。所以这个问题可能和stdout有关，但是我对io还完全没有概念，所以如果阅读完后续章节能理解有关stdout的源码的话会回头再来看一下这里
+
+另外还有一个很有意思的地方，在gdb中run最终的程序会发现打印了一大堆malloc和free，而且如果free使用printf并不会存在问题，但是打印的顺序会和全部使用用stderr的fprintf有些不一样
+
+我想这些问题之后我应该会能得到答案吧（
+

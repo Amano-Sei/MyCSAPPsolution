@@ -7,8 +7,8 @@
 
 #include <stdio.h>
 
-unsigned x;
 unsigned y;
+unsigned x;
 
 void f(){
     x = 0;
