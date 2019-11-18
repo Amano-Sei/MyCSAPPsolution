@@ -244,7 +244,10 @@ void sigchld_handler(int signum){
 
 void kill_handler(int signum){
     if(cjid > 0 && proc[cjid-1].stat == 1){
-        if(kill(proc[cjid-1].pid, signum) < 0){
+        //if(kill(proc[cjid-1].pid, signum) < 0){
+        //从shell lab过来的，发觉应该是给那个job和他的所有子进程（
+        //所以题目里才强调是前台进程组
+        if(kill(-proc[cjid-1].pid, signum) < 0){
             perror("kill error");
             exit(0);
         }
@@ -292,7 +295,7 @@ void builtin_bg(char **argv){
         printf("bg: %s: No such process\n", argv[1]);
         return;
     }
-    int ret = kill(pid, SIGCONT);
+    int ret = kill(-pid, SIGCONT);
     if(ret < 0){
         if(errno == ESRCH){
             printf("bg: %s: No such process\n", argv[1]);
@@ -320,7 +323,7 @@ void builtin_fg(char **argv){
         printf("fg: %s: No such process\n", argv[1]);
         return;
     }
-    int ret = kill(pid, SIGCONT);
+    int ret = kill(-pid, SIGCONT);
     if(ret < 0){
         if(errno == ESRCH){
             printf("fg: %s: No such process\n", argv[1]);
