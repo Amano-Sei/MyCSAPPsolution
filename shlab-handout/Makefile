@@ -2,7 +2,7 @@
 
 TEAM = THEALGORITHM@STER
 VERSION = 1
-HANDINDIR = handin
+HANDINDIR = handindesu
 DRIVER = ./sdriver.pl
 TSH = ./tsh
 TSHREF = ./tshref
