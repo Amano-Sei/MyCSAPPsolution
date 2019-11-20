@@ -57,6 +57,12 @@ test15:
 	$(DRIVER) -t trace15.txt -s $(TSH) -a $(TSHARGS)
 test16:
 	$(DRIVER) -t trace16.txt -s $(TSH) -a $(TSHARGS)
+minitest11:
+	$(DRIVER) -t minitrace11.txt -s $(TSH) -a $(TSHARGS)
+minitest12:
+	$(DRIVER) -t minitrace12.txt -s $(TSH) -a $(TSHARGS)
+minitest13:
+	$(DRIVER) -t minitrace13.txt -s $(TSH) -a $(TSHARGS)
 
 # Run the tests using the reference shell program
 rtest01:
@@ -91,6 +97,12 @@ rtest15:
 	$(DRIVER) -t trace15.txt -s $(TSHREF) -a $(TSHARGS)
 rtest16:
 	$(DRIVER) -t trace16.txt -s $(TSHREF) -a $(TSHARGS)
+rminitest11:
+	$(DRIVER) -t minitrace11.txt -s $(TSHREF) -a $(TSHARGS)
+rminitest12:
+	$(DRIVER) -t minitrace12.txt -s $(TSHREF) -a $(TSHARGS)
+rminitest13:
+	$(DRIVER) -t minitrace13.txt -s $(TSHREF) -a $(TSHARGS)
 
 
 # clean up
