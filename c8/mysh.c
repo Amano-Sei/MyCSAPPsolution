@@ -218,12 +218,13 @@ void sigchld_handler(int signum){
     int status;
     int ci;
     pid_t pid;
-    while((pid=waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0){
+    while((pid=waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED)) > 0){
         for(ci = 0; ci < tot && proc[ci].pid != pid; ci++);
         if(ci == tot){
             fprintf(stderr, "no such job %d, but received such pid\n", pid);
             exit(0);
         }
+
         if(WIFEXITED(status)){
             printf("Job %d terminated normally with exit status=%d\n", pid, WEXITSTATUS(status));
             removejob(ci+1);
@@ -235,6 +236,9 @@ void sigchld_handler(int signum){
             fprintf(stderr, "Job [%d] %d stopped by signal: ", ci+1, pid);
             psignal(WSTOPSIG(status), NULL);
             proc[ci].stat = 2;
+        }else if(WIFCONTINUED(status)){
+            fprintf(stderr, "Job [%d] %d resumed by signal: SIGCONT\n", ci+1, pid);
+            proc[ci].stat = 1;
         }else{
             fprintf(stderr, "pid %d returned for unknowed reason...\n", pid);
             exit(0);
