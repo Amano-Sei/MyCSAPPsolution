@@ -1,7 +1,7 @@
 # Student's Makefile for the CS:APP Performance Lab
-TEAM = bovik
+TEAM = THEALGORITHM@STER
 VERSION = 1
-HANDINDIR = 
+HANDINDIR = handin
 
 CC = gcc
 CFLAGS = -Wall -O2 -m32

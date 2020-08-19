@@ -997,6 +997,7 @@ void malloc_error(int tracenum, int opnum, char *msg)
 {
     errors++;
     printf("ERROR [trace %d, line %d]: %s\n", tracenum, LINENUM(opnum), msg);
+    exit(0);
 }
 
 /* 

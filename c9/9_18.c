@@ -11,6 +11,7 @@
 
 //需要注意，最小块也变成了8字节。
 
+//写lab的时候意识到自己这里忘记分配块没有尾部了...
 
 #define GET_PREV_ALLOC(p) (GET(p) & 0x2)
 #define SET_PREV_ALLOC(p) (PUT((p), GET(p) | 0x2))
@@ -60,7 +61,8 @@ static void *extend_heap(size_t words){
 
 void mm_free(void *bp){
     CL_ALLOC(HDRP(bp));
-    CL_ALLOC(FTRP(bp));
+    //CL_ALLOC(FTRP(bp));
+    PUT(FTRP(bp), PACK(GET_SIZE(HDRP(bp)), 0));
     CL_PREV_ALLOC(HDRP(NEXT_BLKP(bp)));
     coalesce(bp);
 }
@@ -93,13 +95,13 @@ static void place(void *bp, size_t asize){
     size_t csize = GET_SIZE(HDRP(bp));
     if(csize-asize >= DSIZE){
         PUT(HDRP(bp), asize | GET_PREV_ALLOC(HDRP(bp)) | 1);
-        PUT(FTRP(bp), PACK(asize, 1));
+        //PUT(FTRP(bp), PACK(asize, 1));
         bp = NEXT_BLKP(bp);
         PUT(HDRP(bp), PACK(csize-asize, 2));
         PUT(FTRP(bp), PACK(csize-asize, 0));
     }else{
         PUT(HDRP(bp), csize | GET_PREV_ALLOC(HDRP(bp)) | 1);
-        PUT(FTRP(bp), PACK(csize, 1));
+        //PUT(FTRP(bp), PACK(csize, 1));
     }
 }
 
