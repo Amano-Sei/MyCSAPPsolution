@@ -277,8 +277,12 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
+    if(argv[0] == NULL)
+        return 1;
     if(strcmp(argv[0], "quit") == 0)
         exit(0);
+    if(strcmp(argv[0], "") == 0)
+        return 1;
     if(strcmp(argv[0], "jobs") == 0){
         listjobs(jobs);
         return 1;
