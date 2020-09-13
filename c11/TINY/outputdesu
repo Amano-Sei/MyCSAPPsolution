@@ -1,0 +1,45 @@
+Accepted connection from (localhost, 40958)
+Request header:
+GET / HTTP/1.1
+Host: 127.0.0.1
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh,en-US;q=0.9,en;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,ja;q=0.5
+
+check here
+check here
+Accepted connection from (localhost, 40960)
+Request header:
+GET / HTTP/1.1
+Host: 127.0.0.1
+Connection: keep-alive
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh,en-US;q=0.9,en;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,ja;q=0.5
+
+check here
+check here
+Accepted connection from (localhost, 40962)
+Request header:
+GET / HTTP/1.1
+body bgcolor=ffffff>
+<p>404: Not found</p>
+<p>TINY couldn't find this file: ./home.html</p>
+<hr><em>The TINY Web server</em></body></html>
+body bgcolor=ffffff>
+<p>404: Not found</p>
+<p>TINY couldn't find this file: ./home.html</p>

@@ -56,6 +56,7 @@ int main(){
     Signal(SIGCHLD, sigchld_handler);
     Signal(SIGINT, kill_handler);
     Signal(SIGTSTP, kill_handler);
+    cjid = 0;
 
     while(1){
         for(ci = 0; ci < MAXARGS && cmdlines[ci][0]; ci++);

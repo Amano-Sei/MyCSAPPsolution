@@ -1,0 +1,26 @@
+<html>
+    <header>
+        <title>Adder</title>
+    </header>
+    <body>
+        <h3>Welcome to add.com: The Internet addition portal.</h3>
+        <p>Input two numbers into the form to get the sum of them.</p>
+        <form action="/cgi-bin/adder" method="post">
+            <p>
+                <label for="num1">num1:</label>
+                <input type="number" id="num1" name="num1" min="-2147483648" max="2147483647" placeholder="num1">
+            </p>
+            <p>
+                <label for="num2">num2:</label>
+                <input type="number" id="num2" name="num2" min="-2147483648" max="2147483647" placeholder="num2">
+            </p>
+            <p>
+                <input type="submit" formenctype="application/x-www-form-urlencoded">
+                <input type="submit" formenctype="multipart/form-data">
+                <input type="submit" formenctype="text/plain">
+                <input type="reset">
+            </p>
+        </form>
+        <p>Thanks for visiting!</p>
+    </body>
+</html>
