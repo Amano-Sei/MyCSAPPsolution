@@ -6,16 +6,9 @@
  ************************************************************************/
 
 #include "csapp.h"
+#include "sbuf-b.h"
 
-void doit(int fd);
-int read_requesthdrs(rio_t *rp, char *cgiargs, int mcode);
-int parse_uri(char *uri, char *filename, char *cgiargs, int mcode);
-void serve_static(int fd, char *filename, int filesize, int mcode);
-void get_filetype(char *filename, char *filetype);
-void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode);
-void clienterror(int fd, char *cause, char *errnum,
-                 char *shortmsg, char *longmsg, int mcode);
-int endwith(const char *s1, const char *s2);
+sbuf_t sbuf;
 
 int main(int argc, char **argv){
     sigset_t mask;
@@ -35,15 +28,16 @@ int main(int argc, char **argv){
         exit(1);
     }
     listenfd = Open_listenfd(argv[1]);
+
+    sbuf_init(&sbuf, MINTHREAD);
+
     while(1){
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (struct sockaddr *)&clientaddr, &clientlen);
         Getnameinfo((struct sockaddr *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-        puts("====================OPENED====================");
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
-        doit(connfd);
-        Close(connfd);
-        puts("====================CLOSED====================");
+        fprintf(stderr, " > Accepted connection from (%s, %s)\n", hostname, port);
+        sbuf_insert(&sbuf, connfd);
+        fprintf(stderr, " > Current threads: %d\n", sbuf.tcnt);
     }
 }
 
@@ -305,6 +299,7 @@ void get_filetype(char *filename, char *filetype){
 
 void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     char buf[MAXLINE], *emptylist[] = {NULL};
+    pid_t pid;
 
     sprintf(buf, "HTTP/1.0 200 OK\r\n"
                  "Server: TINY Web Server\r\n");
@@ -314,7 +309,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     if(!Rio_writen(fd, buf, strlen(buf)))
         return;
 
-    if(Fork() == 0){
+    if((pid = Fork()) == 0){
         switch(mcode){
             case 2:
                 setenv("REQUEST_METHOD", "HEAD", 1);
@@ -330,9 +325,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
         Dup2(fd, STDOUT_FILENO);
         Execve(filename, emptylist, environ);
     }
-    wait(NULL);
-    //现在才意识到这才是原书想要的做法
-    //突然意识到我之前为什么非要用sigchld的handler来回收，看了下是有道题这么要求...
+    waitpid(pid, NULL, 0);
 }
 
 void clienterror(int fd, char *cause, char *errnum,
@@ -366,5 +359,73 @@ int endwith(const char *s1, const char *s2){
     if(s2len > s1len)
         return 0;
     return !strcmp(s1+s1len-s2len, s2);
+}
+
+void *serv_thread(void *vargp){
+    int tid = (int)vargp;
+    int connfd;
+    while(1){
+        fprintf(stderr, " > %d start next round...\n", tid);
+        P(&sbuf.entry);
+        P(&sbuf.threads[tid]);
+        V(&sbuf.entry);
+        //这个的目的是为了提高check线程的优先级。
+        //参考第二类读者写者问题
+        connfd = sbuf_remove(&sbuf);
+        doit(connfd);
+        Close(connfd);
+        V(&sbuf.threads[tid]);
+    }
+}
+
+void *check_thread(void *vargp){
+    sbuf_t *sp = vargp;
+    int stat = 0;
+    int tcnt;
+    Pthread_detach(pthread_self());
+    while(1){
+        P(&sp->entry);
+        fprintf(stderr, " > check_thread start checking...\n");
+        P(&sp->mutex);
+        if(sp->front == sp->rear)
+            stat = -1;
+        else if(sp->front+sp->n == sp->rear)
+            stat = 1;
+        V(&sp->mutex);
+        tcnt = sp->tcnt;
+        switch(stat){
+            case 1:
+                fprintf(stderr, " + check_thread start to add...\n");
+                if(tcnt < MAXTHREAD){
+                    for(int i = tcnt; i < tcnt*2; i++)
+                        Pthread_create(&sp->tid[i], NULL, serv_thread, (void *)i);
+                    sp->tcnt = tcnt*2;
+                    fprintf(stderr, " + the number of threads has changed from %d to %d\n", tcnt, tcnt*2);
+                }else
+                    fprintf(stderr, " + Couldn't make threads more...\n");
+                break;
+            case -1:
+                fprintf(stderr, " - check_thread start to sub...\n");
+                if(tcnt > MINTHREAD){
+                    for(int i = tcnt/2; i < tcnt; i++){
+                        fprintf(stderr, " - check_thread start to close %d...\n", i);
+                        P(&sp->threads[i]);
+                        Pthread_cancel(sp->tid[i]);
+                        Pthread_join(sp->tid[i], NULL);
+                        V(&sp->threads[i]);
+                    }
+                    sp->tcnt = tcnt/2;
+                    fprintf(stderr, " - the number of threads has changed from %d to %d\n", tcnt, tcnt/2);
+                }else
+                    fprintf(stderr, " - Couldn't make threads less...\n");
+                break;
+            default:
+                fprintf(stderr, " > nothing to report...\n");
+                break;
+        }
+
+        V(&sp->entry);
+        sleep(1);
+    }
 }
 

@@ -6,16 +6,9 @@
  ************************************************************************/
 
 #include "csapp.h"
+#include "sbuf.h"
 
-void doit(int fd);
-int read_requesthdrs(rio_t *rp, char *cgiargs, int mcode);
-int parse_uri(char *uri, char *filename, char *cgiargs, int mcode);
-void serve_static(int fd, char *filename, int filesize, int mcode);
-void get_filetype(char *filename, char *filetype);
-void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode);
-void clienterror(int fd, char *cause, char *errnum,
-                 char *shortmsg, char *longmsg, int mcode);
-int endwith(const char *s1, const char *s2);
+sbuf_t sbuf;
 
 int main(int argc, char **argv){
     sigset_t mask;
@@ -35,15 +28,16 @@ int main(int argc, char **argv){
         exit(1);
     }
     listenfd = Open_listenfd(argv[1]);
+
+    sbuf_init(&sbuf, MINTHREAD);
+
     while(1){
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (struct sockaddr *)&clientaddr, &clientlen);
         Getnameinfo((struct sockaddr *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-        puts("====================OPENED====================");
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
-        doit(connfd);
-        Close(connfd);
-        puts("====================CLOSED====================");
+        fprintf(stderr, " > Accepted connection from (%s, %s)\n", hostname, port);
+        sbuf_insert(&sbuf, connfd);
+        fprintf(stderr, " > Current threads: %d\n", sbuf.tcnt);
     }
 }
 
@@ -305,6 +299,7 @@ void get_filetype(char *filename, char *filetype){
 
 void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     char buf[MAXLINE], *emptylist[] = {NULL};
+    pid_t pid;
 
     sprintf(buf, "HTTP/1.0 200 OK\r\n"
                  "Server: TINY Web Server\r\n");
@@ -314,7 +309,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     if(!Rio_writen(fd, buf, strlen(buf)))
         return;
 
-    if(Fork() == 0){
+    if((pid = Fork()) == 0){
         switch(mcode){
             case 2:
                 setenv("REQUEST_METHOD", "HEAD", 1);
@@ -330,9 +325,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
         Dup2(fd, STDOUT_FILENO);
         Execve(filename, emptylist, environ);
     }
-    wait(NULL);
-    //现在才意识到这才是原书想要的做法
-    //突然意识到我之前为什么非要用sigchld的handler来回收，看了下是有道题这么要求...
+    waitpid(pid, NULL, 0);
 }
 
 void clienterror(int fd, char *cause, char *errnum,
@@ -366,5 +359,13 @@ int endwith(const char *s1, const char *s2){
     if(s2len > s1len)
         return 0;
     return !strcmp(s1+s1len-s2len, s2);
+}
+
+void *serv_thread(void *vargp){
+    int tid = (int)vargp;
+    while(1){
+        sbuf_remove(&sbuf, tid);
+        //sleep(10);
+    }
 }
 

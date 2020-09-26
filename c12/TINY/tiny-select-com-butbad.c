@@ -1,11 +1,30 @@
 /*************************************************************************
-    > File Name: tiny.c
+    > File Name: tiny-select.c
     > Author: Amano Sei
     > Mail: amano_sei@outlook.com 
-    > Created Time: 2020年09月10日 星期四 22时06分36秒
+    > Created Time: 2020年09月23日 星期四 19时35分05秒
  ************************************************************************/
 
 #include "csapp.h"
+
+//这里显然题意是想让实现每次读一行的请求行，从我个人意愿上来说
+//想额外实现下视频可以每次写一部分数据，但是有点担心会各种炸裂...
+//先把读的部分搞定吧。
+
+typedef struct{
+    int maxfd;
+    fd_set read_set;
+    fd_set ready_set;
+    int nready;
+    int maxi;
+    int clientfd[FD_SETSIZE];
+    char clientfrom[FD_SETSIZE][32];
+    rio_t clientrio[FD_SETSIZE];
+}pool;
+
+void init_pool(int listenfd, pool *p);
+void add_client(int connfd, pool *p, char *host, char *port);
+void check_clients(pool *p);
 
 void doit(int fd);
 int read_requesthdrs(rio_t *rp, char *cgiargs, int mcode);
@@ -332,7 +351,6 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     }
     wait(NULL);
     //现在才意识到这才是原书想要的做法
-    //突然意识到我之前为什么非要用sigchld的handler来回收，看了下是有道题这么要求...
 }
 
 void clienterror(int fd, char *cause, char *errnum,
@@ -366,5 +384,41 @@ int endwith(const char *s1, const char *s2){
     if(s2len > s1len)
         return 0;
     return !strcmp(s1+s1len-s2len, s2);
+}
+
+void init_pool(int listenfd, pool *p){
+    p->maxi = -1;
+    for(int i = 0; i < FD_SETSIZE; i++)
+        p->clientfd[i] = -1;
+    p->maxfd = listenfd;
+    FD_ZERO(&p->read_set);
+    FD_SET(listenfd, &p->read_set);
+}
+
+void add_client(int connfd, pool *p, char *host, char *port){
+    int i ;
+    p->nready--;
+    for(i = 0; i < FD_SETSIZE; i++)
+        if(p->clientfd[i] < 0){
+            p->clientfd[i] = connfd;
+            Rio_readinitb(&p->clientrio[i], connfd);
+            strcpy(p->clientfrom[i], host);
+            strcat(p->clientfrom[i], ":");
+            strcat(p->clientfrom[i], port);
+
+            FD_SET(connfd, &p->read_set);
+
+            if(connfd > p->maxfd)
+                p->maxfd = connfd;
+            if(i > p->maxi)
+                p->maxi = i;
+            break;
+        }
+    if(i == FD_SETSIZE)
+        app_error("add_client error: Too many clients");
+}
+
+void check_clients(pool *p){
+
 }
 

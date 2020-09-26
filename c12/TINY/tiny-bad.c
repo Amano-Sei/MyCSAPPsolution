@@ -17,6 +17,8 @@ void clienterror(int fd, char *cause, char *errnum,
                  char *shortmsg, char *longmsg, int mcode);
 int endwith(const char *s1, const char *s2);
 
+void sigchld_handler(int signum);
+
 int main(int argc, char **argv){
     sigset_t mask;
     //因为我们的write和read都是可以重启的
@@ -29,6 +31,7 @@ int main(int argc, char **argv){
     Sigemptyset(&mask);
     Sigaddset(&mask, SIGPIPE);
     Sigprocmask(SIG_BLOCK, &mask, NULL);
+    Signal(SIGCHLD, sigchld_handler);
 
     if(argc != 2){
         fprintf(stderr, "usage: %s <port>\n", argv[0]);
@@ -166,7 +169,6 @@ int read_requesthdrs(rio_t *rp, char *cgiargs, int mcode){
             case 0:
                 if(!Rio_readnb(rp, cgiargs, clen))
                     return -3;
-                cgiargs[clen] = '\0';
                 return 0;
             case 1:
                 tclen = Rio_readnb(rp, buf, clen);
@@ -330,9 +332,6 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
         Dup2(fd, STDOUT_FILENO);
         Execve(filename, emptylist, environ);
     }
-    wait(NULL);
-    //现在才意识到这才是原书想要的做法
-    //突然意识到我之前为什么非要用sigchld的handler来回收，看了下是有道题这么要求...
 }
 
 void clienterror(int fd, char *cause, char *errnum,
@@ -366,5 +365,26 @@ int endwith(const char *s1, const char *s2){
     if(s2len > s1len)
         return 0;
     return !strcmp(s1+s1len-s2len, s2);
+}
+
+void sigchld_handler(int signum){
+    int old_errno = errno;
+    int status;
+    pid_t pid;
+    while((pid = waitpid(-1, &status, WNOHANG)) > 0){
+        if(WIFEXITED(status)){
+            printf("Cgi program %d terminated normally with exit status=%d\n", pid, WEXITSTATUS(status));
+        }else if(WIFSIGNALED(status)){
+            printf("Cgi program %d terminated by signal: ", pid);
+            psignal(WTERMSIG(status), NULL);
+        }else{
+            printf("pid %d returned by unknowed reason...\n", pid);
+            exit(0);
+        }
+    }
+    if(pid < 0 && errno != ECHILD)
+        unix_error("sigchld_hanlder error");
+    errno = old_errno;
+    //这里是看别人之后加的，想了下确实有必要
 }
 

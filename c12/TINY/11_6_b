@@ -1,0 +1,73 @@
+====================OPENED====================
+Accepted connection from (localhost, 38158)
+Request header:
+GET / HTTP/1.1
+Host: 127.0.0.1
+Connection: keep-alive
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh,en-US;q=0.9,en;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,ja;q=0.5
+
+Response headers:
+HTTP/1.0 200 OK
+Server: TINY Web Server
+Connection: close
+Content-length: 377
+Content-type: text/html;charset=UTF-8
+
+====================CLOSED====================
+====================OPENED====================
+Accepted connection from (localhost, 38160)
+Request header:
+GET /img/iori.jpg HTTP/1.1
+Host: 127.0.0.1
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36
+Accept: image/webp,image/apng,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: http://127.0.0.1/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh,en-US;q=0.9,en;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,ja;q=0.5
+
+Response headers:
+HTTP/1.0 200 OK
+Server: TINY Web Server
+Connection: close
+Content-length: 23408
+Content-type: image/jpeg
+
+====================CLOSED====================
+====================OPENED====================
+Accepted connection from (localhost, 38162)
+Request header:
+GET /img/iori.jpg HTTP/1.1
+Host: 127.0.0.1
+Connection: keep-alive
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36
+Accept: image/webp,image/apng,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: empty
+Referer: http://127.0.0.1/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh,en-US;q=0.9,en;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,ja;q=0.5
+
+Response headers:
+HTTP/1.0 200 OK
+Server: TINY Web Server
+Connection: close
+Content-length: 23408
+Content-type: image/jpeg
+
+====================CLOSED====================

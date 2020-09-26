@@ -332,7 +332,6 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     }
     wait(NULL);
     //现在才意识到这才是原书想要的做法
-    //突然意识到我之前为什么非要用sigchld的handler来回收，看了下是有道题这么要求...
 }
 
 void clienterror(int fd, char *cause, char *errnum,

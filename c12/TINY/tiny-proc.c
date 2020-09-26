@@ -1,8 +1,8 @@
 /*************************************************************************
-    > File Name: tiny.c
+    > File Name: tiny-proc.c
     > Author: Amano Sei
     > Mail: amano_sei@outlook.com 
-    > Created Time: 2020年09月10日 星期四 22时06分36秒
+    > Created Time: 2020年09月23日 星期四 19时13分59秒
  ************************************************************************/
 
 #include "csapp.h"
@@ -17,8 +17,10 @@ void clienterror(int fd, char *cause, char *errnum,
                  char *shortmsg, char *longmsg, int mcode);
 int endwith(const char *s1, const char *s2);
 
+void sigchld_handler(int signum);
+
 int main(int argc, char **argv){
-    sigset_t mask;
+    sigset_t mask, prev;
     //因为我们的write和read都是可以重启的
     //所以应该不用屏蔽...
     int listenfd, connfd;
@@ -30,20 +32,28 @@ int main(int argc, char **argv){
     Sigaddset(&mask, SIGPIPE);
     Sigprocmask(SIG_BLOCK, &mask, NULL);
 
+    Sigemptyset(&mask);
+    Sigaddset(&mask, SIGCHLD);
+    Sigprocmask(SIG_BLOCK, &mask, &prev);
+    Signal(SIGCHLD, sigchld_handler);
+
     if(argc != 2){
         fprintf(stderr, "usage: %s <port>\n", argv[0]);
         exit(1);
     }
     listenfd = Open_listenfd(argv[1]);
     while(1){
+        Sigprocmask(SIG_SETMASK, &prev, NULL);
+        Sigprocmask(SIG_BLOCK, &mask, NULL);
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (struct sockaddr *)&clientaddr, &clientlen);
         Getnameinfo((struct sockaddr *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-        puts("====================OPENED====================");
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
-        doit(connfd);
-        Close(connfd);
-        puts("====================CLOSED====================");
+        printf("=> Accepted connection from (%s, %s)\n", hostname, port);
+        if(Fork() == 0){
+            doit(connfd);
+            Close(connfd);
+            exit(0);
+        }
     }
 }
 
@@ -332,7 +342,6 @@ void serve_dynamic(int fd, char *filename, char *cgiargs, int mcode){
     }
     wait(NULL);
     //现在才意识到这才是原书想要的做法
-    //突然意识到我之前为什么非要用sigchld的handler来回收，看了下是有道题这么要求...
 }
 
 void clienterror(int fd, char *cause, char *errnum,
@@ -366,5 +375,25 @@ int endwith(const char *s1, const char *s2){
     if(s2len > s1len)
         return 0;
     return !strcmp(s1+s1len-s2len, s2);
+}
+
+void sigchld_handler(int signum){
+    int olderrno = errno;
+    int status;
+    pid_t pid;
+    while((pid = waitpid(-1, &status, WNOHANG)) > 0){
+        if(WIFEXITED(status))
+            printf("Connection on %d has been done with exit status: %d\n", pid, WEXITSTATUS(status));
+        else if(WIFSIGNALED(status)){
+            printf("Connection on %d has been terminated by signal:", pid);
+            psignal(WTERMSIG(status), NULL);
+        }else{
+            printf("pid %d returned by unknowed reason...\n", pid);
+            exit(0);
+        }
+    }
+    if(pid < 0 && errno != ECHILD)
+        unix_error("sigchld_handler error");
+    errno = olderrno;
 }
 
