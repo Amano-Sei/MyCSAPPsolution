@@ -165,7 +165,11 @@ int tmin(void) {
  *   Rating:
  */
 int isTmax(int x) {
-  return !((~x)+(~x)) & !!(~0^x);
+  //return !((~x)+(~x)) & !!(~0^x);
+  //可能和gcc版本有关出现了bug，查看汇编会发现前半只有x为-1才会为1
+  //gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+  return !(x+2+x)&!!(x+1);
+  //类似的这里如果变换顺序为x+x+2也会出现相同的bug
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1

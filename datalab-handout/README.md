@@ -1,5 +1,8 @@
 # Data Lab
-2019-09-16 下 更新：突然意识到自己之前太浮躁了，所以简单地把fpu的教程过了下，成功读懂了m32的test_floatPower2的机器代码，确认了没有（本来就知道没有的）死循环，也感受了fpu的寄存器栈有多麻烦，但是（重点来了，我还是不会写fpu的汇编代码←说的你好像会写avx2版本的一样。嘛csapp如是说，"现在不再要求程序员会写汇编，只要会读就可以了"，如果需要更进一步的学习指令集什么的到需要的时候再说  
+
+2021-08-31 夜 时隔两年了，说起来这个文档当初我还不怎么会写markdown来着...另外data lab出新版本了，看眼release notes，好像就多了个write up。然后是关于`floatPower2`超时我想有了最终的结论，详细可见[这里](https://github.com/Amano-Sei/MyCSAPPsolution/issues/2)。另外我现机器环境不需要修改超时时间即可全过，但是出现了一个奇怪的小bug，详细可以阅读`isTmax`部分的注释。
+
+2019-09-16 下 更新：突然意识到自己之前太浮躁了，所以简单地把fpu的教程过了下，成功读懂了m32的test\_floatPower2的机器代码，确认了没有（本来就知道没有的）死循环，也感受了fpu的寄存器栈有多麻烦，但是（重点来了，我还是不会写fpu的汇编代码←说的你好像会写avx2版本的一样。嘛csapp如是说，"现在不再要求程序员会写汇编，只要会读就可以了"，如果需要更进一步的学习指令集什么的到需要的时候再说  
 另外因为这周末有ccpc现场赛，和专业课有一丢丢迷糊的地方（虽然只要一两个小时应该就可以完全搞定，只是在找借口，所以csapp会稍稍降低一点比重，c4（含lab）的期望完成时间是十一前  
 另外还有一点诡异的事情，我在同学新装的ubuntu 19.04(gcc 8.3)上用-m64编译的话isTmax过不了...仔细确认了自己的代码没有逻辑错误之后，猜想可能和gcc版本导致的运算符优先级不同有关...但是不好意思再拉下脸请求他再去试一次了...反正逻辑没有错，就这样吧...  
   
@@ -19,6 +22,7 @@
 但是我相信做精的最后一定比做得快的强，慢慢做脚踏实体地前进最后一定会比急躁的家伙强的多的  
   
 # dlc检查结果
+```
 dlc:bits.c:147:bitXor: 8 operators  
 dlc:bits.c:158:tmin: 1 operators  
 dlc:bits.c:169:isTmax: 9 operators  
@@ -32,8 +36,10 @@ dlc:bits.c:271:howManyBits: 31 operators
 dlc:bits.c:299:floatScale2: 15 operators  
 dlc:bits.c:328:floatFloat2Int: 19 operators  
 dlc:bits.c:351:floatPower2: 10 operators  
+```
    
 # btest 结果
+```
 Score	Rating	Errors	Function  
  1	1	0	bitXor  
  1	1	0	tmin  
@@ -49,8 +55,10 @@ Score	Rating	Errors	Function
  4	4	0	floatFloat2Int  
  4	4	0	floatPower2  
 Total points: 36/36  
+```
 
 # driver.pl 结果
+```
 Correctness Results	Perf Results  
 Points	Rating	Errors	Points	Ops	Puzzle  
 1	1	0	2	8	bitXor  
@@ -68,4 +76,5 @@ Points	Rating	Errors	Points	Ops	Puzzle
 4	4	0	2	10	floatPower2  
   
 Score = 62/62 [36/36 Corr + 26/26 Perf] (145 total operators)  
+```
 
