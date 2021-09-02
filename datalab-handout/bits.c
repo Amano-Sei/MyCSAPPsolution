@@ -170,6 +170,7 @@ int isTmax(int x) {
   //gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
   return !(x+2+x)&!!(x+1);
   //类似的这里如果变换顺序为x+x+2也会出现相同的bug
+  //但是通过gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0编译并不会出现这个bug
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
