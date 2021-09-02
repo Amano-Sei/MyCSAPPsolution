@@ -165,12 +165,15 @@ int tmin(void) {
  *   Rating:
  */
 int isTmax(int x) {
+//int isTmax(unsigned x) {
   //return !((~x)+(~x)) & !!(~0^x);
-  //可能和gcc版本有关出现了bug，查看汇编会发现前半只有x为-1才会为1
   //gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+  //在这个版本下gcc会对前半运算进行优化，只检查x是不是-1。
+  //由于有符号数运算溢出是未定义的，所以该优化没有任何问题。
+  //但是通过gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0编译并不会进行这一优化
+  //另外如果x是无符号数也会因为规定了溢出行为而不进行优化
   return !(x+2+x)&!!(x+1);
-  //类似的这里如果变换顺序为x+x+2也会出现相同的bug
-  //但是通过gcc-7 (Ubuntu 7.5.0-6ubuntu2) 7.5.0编译并不会出现这个bug
+  //只要用到+就有可能溢出，但是我想不到不用+的做法
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
